@@ -1,0 +1,295 @@
+/* public/css/main.css */
+/* Custom styles for the Somabay Handbook website and admin panel. */
+
+/* General Body and HTML Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6; /* Light background for the main site */
+    color: #333;
+}
+
+/* Wrapper for main site layout (sidebar + content) */
+.wrapper {
+    display: flex;
+    min-height: 100vh; /* Ensure wrapper takes full viewport height */
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 280px; /* Fixed width for the sidebar */
+    min-width: 280px;
+    background: #2c3e50; /* Dark background for sidebar */
+    color: #ecf0f1; /* Light text color */
+    transition: all 0.3s;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    padding-bottom: 20px; /* Padding at the bottom */
+    overflow-y: auto; /* Enable scrolling for long sidebars */
+}
+
+.sidebar-header {
+    padding: 20px;
+    background: #34495e; /* Slightly lighter dark for header */
+    text-align: center;
+    border-bottom: 1px solid #4a627a;
+}
+
+.somabay-logo {
+    max-width: 100px; /* Max width for the logo */
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.sidebar-header h4 {
+    color: #ecf0f1;
+    margin: 0;
+    font-weight: 600;
+}
+
+.sidebar-menu {
+    padding: 20px 0;
+}
+
+.sidebar-menu .menu-item {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu .menu-link {
+    padding: 10px 20px;
+    color: #ecf0f1;
+    display: block;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    font-size: 1.05em;
+    position: relative;
+}
+
+.sidebar-menu .menu-link:hover,
+.sidebar-menu .menu-link.active {
+    background: #3498db; /* Highlight color on hover/active */
+    color: #fff;
+    border-radius: 0 25px 25px 0; /* Rounded right edge */
+}
+
+/* Styles for collapsible menu items */
+.sidebar-menu .has-children > .menu-link::after {
+    content: '\25BC'; /* Down arrow unicode character */
+    font-size: 0.8em;
+    float: right;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-menu .has-children.expanded > .menu-link::after {
+    transform: rotate(-90deg); /* Rotate arrow when expanded */
+}
+
+.sidebar-menu .submenu {
+    list-style: none;
+    padding-left: 25px; /* Indent sub-menu items */
+    margin: 0;
+    background: #34495e; /* Slightly different background for submenus */
+    display: none; /* Hidden by default */
+}
+
+.sidebar-menu .has-children.expanded .submenu {
+    display: block; /* Show when expanded */
+}
+
+.sidebar-menu .submenu-link {
+    padding: 8px 20px;
+    color: #bdc3c7; /* Lighter text for sub-items */
+    display: block;
+    text-decoration: none;
+    font-size: 0.95em;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-menu .submenu-link:hover,
+.sidebar-menu .submenu-link.active {
+    background: #2980b9; /* Darker highlight for sub-items */
+    color: #fff;
+    border-radius: 0 20px 20px 0;
+}
+
+/* Main Content Area Styles */
+.content {
+    flex-grow: 1; /* Content takes remaining space */
+    padding: 30px;
+    background-color: #fff; /* White background for content */
+    box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+    overflow-y: auto; /* Enable scrolling for long content */
+}
+
+.content-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    background-color: var(--header-color, #f8f9fa); /* Dynamic header background color */
+    background-image: var(--header-image, none); /* Dynamic header background image */
+    background-size: cover;
+    background-position: center;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.content-header h1 {
+    color: #2c3e50;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.header-image {
+    max-width: 100%;
+    height: 200px; /* Fixed height for header image */
+    object-fit: cover; /* Cover the area without distortion */
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.page-content {
+    line-height: 1.6;
+    font-size: 1.1em;
+}
+
+.page-content h2, .page-content h3 {
+    color: #2c3e50;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.page-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+    background: #000;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Admin Panel Specific Styles */
+.admin-body {
+    background-color: #e9ecef; /* Lighter background for admin */
+}
+
+.admin-header {
+    background-color: #343a40 !important; /* Dark header for admin */
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+}
+
+.admin-wrapper {
+    padding: 20px;
+}
+
+#admin-login .card-header {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+
+#admin-dashboard {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+#pages-list .list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+}
+
+#pages-list .list-group-item:hover {
+    background-color: #e2e6ea;
+}
+
+#pages-list .page-actions button {
+    margin-left: 5px;
+}
+
+/* Sidebar Sortable List in Admin */
+#sidebar-sortable {
+    min-height: 100px; /* Ensure visibility for drag-and-drop */
+    border: 1px dashed #ccc;
+    padding: 10px;
+    background-color: #fdfdfd;
+    border-radius: 5px;
+}
+
+#sidebar-sortable .list-group-item {
+    cursor: grab;
+    margin-bottom: 5px;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#sidebar-sortable .list-group-item:hover {
+    background-color: #dee2e6;
+}
+
+#sidebar-sortable .list-group-item.ui-sortable-helper {
+    background-color: #d1ecf1; /* Highlight dragged item */
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .wrapper {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        max-height: 300px; /* Limit sidebar height on small screens */
+        overflow-y: auto;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-menu .menu-link,
+    .sidebar-menu .submenu-link {
+        border-radius: 0; /* Remove rounded edges on small screens */
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    .content-header h1 {
+        font-size: 2em;
+    }
+}

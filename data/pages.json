@@ -1,0 +1,1045 @@
+[
+    {
+        "id": "our-company",
+        "title": "Our Company",
+        "slug": null,
+        "content": null,
+        "published": true,
+        "design": {
+            "headerColor": "#f8f9fa",
+            "headerImage": "/uploads/default-header.jpg"
+        },
+        "children": [
+            {
+                "id": "our-company-shareholders",
+                "title": "Shareholders",
+                "slug": "our-company-shareholders",
+                "content": "<h2>Shareholders</h2><p>Details about Somabay's esteemed shareholders and their contributions to our vision. Our shareholders are committed to sustainable development and long-term growth, ensuring a prosperous future for the entire Somabay community.</p><img src=\"/uploads/placeholder-image.jpg\" alt=\"Shareholders Meeting\"><p>We maintain transparency and open communication with all our investors, fostering a strong relationship built on trust and mutual success.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e9f7ef",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-company-vision-mission",
+                "title": "Vision & Mission",
+                "slug": "our-company-vision-mission",
+                "content": "<h2>Vision & Mission</h2><p><strong>Vision:</strong> To be the leading integrated resort destination in the Red Sea, renowned for its unparalleled luxury, natural beauty, and vibrant community.</p><p><strong>Mission:</strong> To create exceptional experiences for our guests and residents, deliver sustainable value to our stakeholders, and contribute positively to the local environment and economy.</p><div class=\"video-container\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/dQw4w9WgXcQ\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe></div>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e6f2f8",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-company-core-values",
+                "title": "Core Values",
+                "slug": "our-company-core-values",
+                "content": "<h2>Core Values</h2><ul><li><strong>Excellence:</strong> Striving for the highest standards in everything we do.</li><li><strong>Integrity:</strong> Upholding honesty and strong moral principles.</li><li><strong>Sustainability:</strong> Committed to environmental protection and community well-being.</li><li><strong>Innovation:</strong> Embracing creativity and continuous improvement.</li><li><strong>Teamwork:</strong> Collaborating to achieve shared goals.</li></ul>",
+                "published": true,
+                "design": {
+                    "headerColor": "#fcf8e3",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-company-sister-companies",
+                "title": "Sister Companies",
+                "slug": "our-company-sister-companies",
+                "content": "<h2>Sister Companies</h2><p>Somabay is part of a larger group of companies, each contributing to a diverse portfolio of services and developments. Our sister companies include leaders in hospitality, real estate, and leisure, all working in synergy to enhance the overall value proposition of our brand.</p><p>Key partners include [Sister Company A], [Sister Company B], and [Sister Company C], which specialize in [brief description of their focus].</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#f0f8ff",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-company-ceo",
+                "title": "CEO",
+                "slug": "our-company-ceo",
+                "content": "<h2>Meet Our CEO</h2><p>[CEO's Name] leads Somabay with a vision for innovation and sustainable growth. With over [X] years of experience in the hospitality and real estate sectors, [CEO's Name] has been instrumental in shaping Somabay into a world-class destination.</p><img src=\"/uploads/placeholder-ceo.jpg\" alt=\"CEO Portrait\"><p>Under their leadership, Somabay continues to expand its offerings and enhance its reputation as a premier Red Sea destination.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#f5f5dc",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-company-executive-chart",
+                "title": "Executive Chart",
+                "slug": "our-company-executive-chart",
+                "content": "<h2>Executive Chart</h2><p>An overview of Somabay's executive leadership structure, detailing key roles and reporting lines. Our leadership team is composed of experienced professionals dedicated to driving the company's success and upholding its core values.</p><img src=\"/uploads/placeholder-org-chart.png\" alt=\"Organizational Chart\"><p>Each department is led by experts in their respective fields, ensuring efficient operations and strategic decision-making across the organization.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#f0fff0",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            }
+        ]
+    },
+    {
+        "id": "our-destination",
+        "title": "Our Destination",
+        "slug": null,
+        "content": null,
+        "published": true,
+        "design": {
+            "headerColor": "#f8f9fa",
+            "headerImage": "/uploads/default-header.jpg"
+        },
+        "children": [
+            {
+                "id": "our-destination-prime-location",
+                "title": "Prime Location",
+                "slug": "our-destination-prime-location",
+                "content": "<h2>Prime Location</h2><p>Somabay is strategically located on the Red Sea coast of Egypt, offering breathtaking views, pristine beaches, and a vibrant marine ecosystem. Its unique peninsula setting provides an exclusive and serene environment, easily accessible from major international airports.</p><img src=\"/uploads/placeholder-location.jpg\" alt=\"Somabay Location\"><p>The ideal climate and natural beauty make it a perfect year-round destination for relaxation and adventure.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e0f7fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-destination-residentials",
+                "title": "Residentials",
+                "slug": "our-destination-residentials",
+                "content": "<h2>Residentials</h2><p>Somabay offers a diverse range of luxurious residential properties, from elegant villas to modern apartments, all designed to blend seamlessly with the natural landscape. Each residential community provides exclusive amenities and stunning views, ensuring a premium living experience.</p><img src=\"/uploads/placeholder-residentials.jpg\" alt=\"Somabay Residentials\"><p>Discover your dream home in a community that prioritizes comfort, privacy, and access to world-class facilities.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e8f5e9",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-destination-hotels",
+                "title": "Hotels",
+                "slug": "our-destination-hotels",
+                "content": "<h2>Hotels</h2><p>Experience unparalleled hospitality at Somabay's collection of luxury hotels. From boutique resorts to expansive family-friendly accommodations, each hotel offers exceptional service, exquisite dining, and a wide array of amenities to ensure a memorable stay.</p><img src=\"/uploads/placeholder-hotels.jpg\" alt=\"Somabay Hotels\"><p>Whether you seek relaxation or adventure, our hotels provide the perfect base for your Somabay experience.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#fff3e0",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            },
+            {
+                "id": "our-destination-sports",
+                "title": "Sports",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "our-destination-sports-golf",
+                        "title": "Golf",
+                        "slug": "our-destination-sports-golf",
+                        "content": "<h2>Golf</h2><p>Somabay is home to an 18-hole championship golf course designed by Gary Player, offering stunning views of the Red Sea and challenging play for golfers of all skill levels. The course is meticulously maintained and provides a world-class golfing experience.</p><img src=\"/uploads/placeholder-golf.jpg\" alt=\"Somabay Golf Course\"><p>Enjoy a round of golf in a spectacular setting, complete with professional instruction and a well-equipped pro shop.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f2f7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-destination-sports-tennis-academy",
+                        "title": "Tennis Academy",
+                        "slug": "our-destination-sports-tennis-academy",
+                        "content": "<h2>Tennis Academy</h2><p>Our state-of-the-art Tennis Academy offers professional coaching and facilities for tennis enthusiasts. With multiple courts and experienced instructors, you can improve your game or simply enjoy a friendly match in a beautiful environment.</p><img src=\"/uploads/placeholder-tennis.jpg\" alt=\"Tennis Academy\"><p>Programs are available for all ages and skill levels, from beginners to advanced players.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-destination-sports-clubhouse",
+                        "title": "Clubhouse (Paddle - FB - BB - Squash …etc)",
+                        "slug": "our-destination-sports-clubhouse",
+                        "content": "<h2>Clubhouse</h2><p>The Somabay Clubhouse is the hub for various sports and social activities. It features facilities for Paddle Tennis, Football, Basketball, Squash, and more. It's the perfect place to engage in sports, socialize, and relax after a day of activities.</p><img src=\"/uploads/placeholder-clubhouse.jpg\" alt=\"Clubhouse Activities\"><p>Enjoy a wide range of amenities, including a pro shop, changing rooms, and a cafe.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#f3e5f5",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "our-destination-sustainability",
+                "title": "Sustainability - Solar & N. Gas",
+                "slug": "our-destination-sustainability",
+                "content": "<h2>Sustainability - Solar & Natural Gas</h2><p>Somabay is deeply committed to environmental sustainability, utilizing solar energy and natural gas to power its operations. Our initiatives aim to minimize our carbon footprint and promote eco-friendly practices across the destination.</p><img src=\"/uploads/placeholder-solar.jpg\" alt=\"Solar Panels\"><p>We continuously invest in green technologies and conservation efforts to preserve the natural beauty of the Red Sea.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e8f5e9",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            }
+        ]
+    },
+    {
+        "id": "our-benefits",
+        "title": "Our Benefits",
+        "slug": null,
+        "content": null,
+        "published": true,
+        "design": {
+            "headerColor": "#f8f9fa",
+            "headerImage": "/uploads/default-header.jpg"
+        },
+        "children": [
+            {
+                "id": "our-benefits-education",
+                "title": "Education",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "our-benefits-education-school",
+                        "title": "School",
+                        "slug": "our-benefits-education-school",
+                        "content": "<h2>School</h2><p>Somabay provides access to high-quality educational facilities for employees' children, ensuring a supportive learning environment. Our partner schools offer a comprehensive curriculum and extracurricular activities to foster holistic development.</p><img src=\"/uploads/placeholder-school.jpg\" alt=\"School Building\"><p>We believe in investing in the future of our community through excellent educational opportunities.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e1f5fe",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-education-university",
+                        "title": "University",
+                        "slug": "our-benefits-education-university",
+                        "content": "<h2>University</h2><p>Opportunities for higher education are supported through partnerships with reputable universities, offering various programs and scholarships for eligible employees and their families. We encourage continuous learning and professional growth.</p><img src=\"/uploads/placeholder-university.jpg\" alt=\"University Campus\"><p>Explore pathways to advanced degrees and specialized training to further your career.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8eaf6",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "our-benefits-insurance",
+                "title": "Insurance",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "our-benefits-insurance-medical",
+                        "title": "Medical",
+                        "slug": "our-benefits-insurance-medical",
+                        "content": "<h2>Medical Insurance</h2><p>Comprehensive medical insurance coverage is provided to all employees and their eligible dependents, ensuring access to quality healthcare services. Our plans cover a wide range of medical needs, from routine check-ups to specialized treatments.</p><img src=\"/uploads/placeholder-medical.jpg\" alt=\"Medical Insurance\"><p>Your health and well-being are our top priority.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f2f7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-insurance-life",
+                        "title": "Life",
+                        "slug": "our-benefits-insurance-life",
+                        "content": "<h2>Life Insurance</h2><p>Life insurance benefits offer financial security and peace of mind for employees and their families. This benefit provides coverage in unforeseen circumstances, ensuring your loved ones are protected.</p><img src=\"/uploads/placeholder-life.jpg\" alt=\"Life Insurance\"><p>We care about your future and the security of your family.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-insurance-social",
+                        "title": "Social",
+                        "slug": "our-benefits-insurance-social",
+                        "content": "<h2>Social Insurance</h2><p>Employees are covered by social insurance programs, providing a safety net for retirement, disability, and other social welfare benefits. We ensure compliance with all national social security regulations.</p><img src=\"/uploads/placeholder-social.jpg\" alt=\"Social Insurance\"><p>These benefits are designed to support you throughout your career and beyond.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "our-benefits-accommodation",
+                "title": "Accommodation",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "our-benefits-accommodation-lodging",
+                        "title": "Lodging",
+                        "slug": "our-benefits-accommodation-lodging",
+                        "content": "<h2>Lodging</h2><p>Somabay provides comfortable and convenient lodging options for eligible staff, ensuring a high standard of living close to the workplace. Our accommodations are well-maintained and equipped with essential amenities.</p><img src=\"/uploads/placeholder-lodging.jpg\" alt=\"Staff Lodging\"><p>We strive to create a home-away-from-home environment for our employees.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#f0f4c3",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-accommodation-meals",
+                        "title": "Meals",
+                        "slug": "our-benefits-accommodation-meals",
+                        "content": "<h2>Meals</h2><p>Staff are provided with nutritious and diverse meal options at designated dining facilities. We ensure a variety of cuisines to cater to different tastes and dietary requirements.</p><img src=\"/uploads/placeholder-meals.jpg\" alt=\"Staff Meals\"><p>Enjoy wholesome meals prepared with fresh ingredients to keep you energized.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#ffe0b2",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-accommodation-laundry",
+                        "title": "Laundry",
+                        "slug": "our-benefits-accommodation-laundry",
+                        "content": "<h2>Laundry Services</h2><p>Convenient laundry services are available for staff, making daily life easier and more comfortable. We provide efficient and reliable services to meet your needs.</p><img src=\"/uploads/placeholder-laundry.jpg\" alt=\"Laundry Service\"><p>Focus on your work and leisure, and let us take care of your laundry.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "our-benefits-commuting",
+                "title": "Commuting",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "our-benefits-commuting-cai-soma",
+                        "title": "CAI-SOMA",
+                        "slug": "our-benefits-commuting-cai-soma",
+                        "content": "<h2>Cairo to Somabay Commuting</h2><p>Regular transportation services are provided for staff commuting between Cairo and Somabay, ensuring a smooth and comfortable journey. Our dedicated transport ensures timely and safe travel.</p><img src=\"/uploads/placeholder-bus.jpg\" alt=\"CAI-SOMA Bus\"><p>Travel with ease and convenience between the city and our beautiful destination.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-commuting-soma-hurghada",
+                        "title": "SOMA-Hurghada",
+                        "slug": "our-benefits-commuting-soma-hurghada",
+                        "content": "<h2>Somabay to Hurghada Commuting</h2><p>Shuttle services are available for staff traveling between Somabay and Hurghada, facilitating access to urban amenities and personal errands. Enjoy reliable and frequent connections.</p><img src=\"/uploads/placeholder-shuttle.jpg\" alt=\"SOMA-Hurghada Shuttle\"><p>Convenient transport links to explore the vibrant city of Hurghada.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-commuting-home-office-home",
+                        "title": "Home-Office-Home",
+                        "slug": "our-benefits-commuting-home-office-home",
+                        "content": "<h2>Home-Office-Home Commuting</h2><p>Dedicated transport services ensure staff can commute comfortably and safely between their homes and the office within Somabay. We prioritize your convenience and well-being.</p><img src=\"/uploads/placeholder-car.jpg\" alt=\"Home-Office Commute\"><p>Reliable daily transport to make your work-life balance easier.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#f1f8e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "our-benefits-sports-activities",
+                "title": "Sports & Activities",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "our-benefits-sports-activities-club-house",
+                        "title": "Club house",
+                        "slug": "our-benefits-sports-activities-club-house",
+                        "content": "<h2>Clubhouse Access</h2><p>Staff enjoy access to the Somabay Clubhouse, offering a range of recreational facilities and social events. It's a great place to unwind, exercise, and connect with colleagues.</p><img src=\"/uploads/placeholder-clubhouse-staff.jpg\" alt=\"Staff Clubhouse\"><p>Take advantage of our modern facilities and vibrant community.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#f3e5f5",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-sports-activities-gym",
+                        "title": "GYM",
+                        "slug": "our-benefits-sports-activities-gym",
+                        "content": "<h2>Gym Facilities</h2><p>Access to a fully equipped gymnasium is provided for staff to maintain their fitness and well-being. Our gym features state-of-the-art equipment and a motivating environment.</p><img src=\"/uploads/placeholder-gym.jpg\" alt=\"Staff Gym\"><p>Stay active and healthy with our convenient on-site gym.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "our-benefits-sports-activities-staff-rates",
+                        "title": "Staff Rates (Jasmin - Dive - Kite ..etc)",
+                        "slug": "our-benefits-sports-activities-staff-rates",
+                        "content": "<h2>Staff Rates for Activities</h2><p>Employees benefit from special staff rates on various activities and services, including Jasmin, Dive, Kite surfing, and more. Explore the best of Somabay at exclusive prices.</p><img src=\"/uploads/placeholder-kitesurf.jpg\" alt=\"Kite Surfing\"><p>Enjoy discounts on thrilling water sports and leisure activities.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "our-benefits-staff-home-owners",
+                "title": "Staff Home owners",
+                "slug": "our-benefits-staff-home-owners",
+                "content": "<h2>Staff Homeowners Program</h2><p>Somabay offers special programs and incentives for staff interested in becoming homeowners within the destination. We support our employees in building a long-term future with us.</p><img src=\"/uploads/placeholder-homeowner.jpg\" alt=\"Staff Homeowner\"><p>Discover exclusive opportunities to own a piece of paradise in Somabay.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#f0f4c3",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            }
+        ]
+    },
+    {
+        "id": "policies",
+        "title": "Policies",
+        "slug": null,
+        "content": null,
+        "published": true,
+        "design": {
+            "headerColor": "#f8f9fa",
+            "headerImage": "/uploads/default-header.jpg"
+        },
+        "children": [
+            {
+                "id": "policies-talent-management",
+                "title": "Talent Management",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-talent-management-hiring",
+                        "title": "Hiring",
+                        "slug": "policies-talent-management-hiring",
+                        "content": "<h2>Hiring Policy</h2><p>Our hiring policy outlines the procedures and principles for recruiting new talent, ensuring fairness, transparency, and equal opportunity. We seek to attract and retain the best professionals.</p><img src=\"/uploads/placeholder-hiring.jpg\" alt=\"Hiring\"><p>Learn about our commitment to diversity and inclusion in the recruitment process.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-talent-management-l-d",
+                        "title": "L&D",
+                        "slug": "policies-talent-management-l-d",
+                        "content": "<h2>Learning & Development (L&D)</h2><p>Somabay is dedicated to the continuous learning and development of its employees through various training programs, workshops, and educational opportunities. We invest in your professional growth.</p><img src=\"/uploads/placeholder-ld.jpg\" alt=\"Learning & Development\"><p>Enhance your skills and advance your career with our comprehensive L&D initiatives.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-talent-management-performance",
+                        "title": "Performance",
+                        "slug": "policies-talent-management-performance",
+                        "content": "<h2>Performance Management</h2><p>Our performance management system focuses on setting clear objectives, regular feedback, and fair evaluations to foster a high-performance culture. We recognize and reward outstanding contributions.</p><img src=\"/uploads/placeholder-performance.jpg\" alt=\"Performance Review\"><p>Understand how your performance is assessed and how you can achieve your full potential.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-talent-management-succession",
+                        "title": "Succession",
+                        "slug": "policies-talent-management-succession",
+                        "content": "<h2>Succession Planning</h2><p>We implement robust succession planning to identify and develop future leaders, ensuring continuity and growth within the organization. Our goal is to nurture internal talent for key roles.</p><img src=\"/uploads/placeholder-succession.jpg\" alt=\"Succession Planning\"><p>Explore career paths and development opportunities for leadership roles.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-talent-management-promotion",
+                        "title": "Promotion",
+                        "slug": "policies-talent-management-promotion",
+                        "content": "<h2>Promotion Policy</h2><p>Our promotion policy outlines the criteria and process for career advancement, recognizing merit and dedication. We provide clear pathways for employees to grow within Somabay.</p><img src=\"/uploads/placeholder-promotion.jpg\" alt=\"Promotion\"><p>Understand the requirements and opportunities for internal promotions.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-attendance",
+                "title": "Attendance",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-attendance-working-hours",
+                        "title": "Working hours",
+                        "slug": "policies-attendance-working-hours",
+                        "content": "<h2>Working Hours Policy</h2><p>This policy details the standard working hours, breaks, and overtime regulations for all employees. We ensure compliance with labor laws and promote a healthy work-life balance.</p><img src=\"/uploads/placeholder-hours.jpg\" alt=\"Working Hours\"><p>Familiarize yourself with the official working schedule and flexibility options.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-attendance-sign-in-out",
+                        "title": "Sign-In & Out",
+                        "slug": "policies-attendance-sign-in-out",
+                        "content": "<h2>Sign-In & Out Policy</h2><p>Guidelines for daily sign-in and sign-out procedures, including the use of timekeeping systems. Accurate record-keeping is essential for payroll and attendance management.</p><img src=\"/uploads/placeholder-signin.jpg\" alt=\"Sign In Out\"><p>Ensure you follow the correct procedures for recording your work hours.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-attendance-tardiness",
+                        "title": "Tardiness",
+                        "slug": "policies-attendance-tardiness",
+                        "content": "<h2>Tardiness Policy</h2><p>This policy addresses instances of tardiness, outlining expectations for punctuality and consequences for repeated lateness. We value your commitment to timely attendance.</p><img src=\"/uploads/placeholder-tardiness.jpg\" alt=\"Tardiness\"><p>Understand the importance of being on time and the procedures for reporting delays.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-attendance-permissions",
+                        "title": "Permissions",
+                        "slug": "policies-attendance-permissions",
+                        "content": "<h2>Permissions Policy</h2><p>Guidelines for requesting and obtaining permission for temporary absences during working hours. This includes personal appointments, short leaves, and other authorized breaks.</p><img src=\"/uploads/placeholder-permissions.jpg\" alt=\"Permissions\"><p>Learn how to properly request and manage your permissions.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-attendance-working-on-official-holidays-weekends",
+                        "title": "Working on Official Holidays & Weekends",
+                        "slug": "policies-attendance-working-on-official-holidays-weekends",
+                        "content": "<h2>Working on Official Holidays & Weekends Policy</h2><p>This policy outlines the regulations and compensation for working on official holidays and weekends. We ensure fair treatment and appropriate remuneration for such work.</p><img src=\"/uploads/placeholder-holiday.jpg\" alt=\"Holiday Work\"><p>Understand your rights and compensation when working outside regular weekdays.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-leave-management",
+                "title": "Leave Management",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-leave-management-leave-1",
+                        "title": "Leave-1",
+                        "slug": "policies-leave-management-leave-1",
+                        "content": "<h2>Annual Leave Policy</h2><p>Details regarding annual leave entitlement, application procedures, and carry-over policies. Plan your well-deserved breaks effectively.</p><img src=\"/uploads/placeholder-leave1.jpg\" alt=\"Annual Leave\"><p>Ensure you understand your annual leave benefits and how to apply.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-2",
+                        "title": "Leave-2",
+                        "slug": "policies-leave-management-leave-2",
+                        "content": "<h2>Sick Leave Policy</h2><p>This policy outlines the procedures for reporting sick leave, required documentation, and duration of paid sick leave. Your health is important to us.</p><img src=\"/uploads/placeholder-leave2.jpg\" alt=\"Sick Leave\"><p>Familiarize yourself with the guidelines for taking sick leave.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-3",
+                        "title": "Leave-3",
+                        "slug": "policies-leave-management-leave-3",
+                        "content": "<h2>Maternity/Paternity Leave Policy</h2><p>Information on maternity and paternity leave benefits, eligibility, and application process. We support new parents in balancing work and family responsibilities.</p><img src=\"/uploads/placeholder-leave3.jpg\" alt=\"Maternity Leave\"><p>Understand the support available for growing families.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-4",
+                        "title": "Leave-4",
+                        "slug": "policies-leave-management-leave-4",
+                        "content": "<h2>Bereavement Leave Policy</h2><p>This policy provides guidelines for bereavement leave, offering support to employees during difficult times. We extend our condolences and support to those experiencing loss.</p><img src=\"/uploads/placeholder-leave4.jpg\" alt=\"Bereavement Leave\"><p>Learn about the provisions for compassionate leave.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-5",
+                        "title": "Leave-5",
+                        "slug": "policies-leave-management-leave-5",
+                        "content": "<h2>Unpaid Leave Policy</h2><p>Details on requesting and approving unpaid leave, including eligibility and impact on benefits. This option is available for extended personal needs.</p><img src=\"/uploads/placeholder-leave5.jpg\" alt=\"Unpaid Leave\"><p>Understand the terms and conditions for taking unpaid leave.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-6",
+                        "title": "Leave-6",
+                        "slug": "policies-leave-management-leave-6",
+                        "content": "<h2>Study Leave Policy</h2><p>This policy supports employees pursuing further education or professional development by providing study leave. We encourage continuous learning and skill enhancement.</p><img src=\"/uploads/placeholder-leave6.jpg\" alt=\"Study Leave\"><p>Explore opportunities for educational leave and career advancement.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-7",
+                        "title": "Leave-7",
+                        "slug": "policies-leave-management-leave-7",
+                        "content": "<h2>Emergency Leave Policy</h2><p>Guidelines for requesting emergency leave due to unforeseen circumstances. We understand that emergencies happen and provide support when you need it most.</p><img src=\"/uploads/placeholder-leave7.jpg\" alt=\"Emergency Leave\"><p>Familiarize yourself with the process for urgent leave requests.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-leave-management-leave-8",
+                        "title": "Leave-8",
+                        "slug": "policies-leave-management-leave-8",
+                        "content": "<h2>Jury Duty Leave Policy</h2><p>This policy outlines provisions for employees summoned for jury duty, ensuring compliance with legal obligations without loss of employment. We support civic duties.</p><img src=\"/uploads/placeholder-leave8.jpg\" alt=\"Jury Duty Leave\"><p>Understand your rights and responsibilities regarding jury service.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-payroll-management",
+                "title": "Payroll Management",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-payroll-management-payroll-protocol",
+                        "title": "Payroll Protocol",
+                        "slug": "policies-payroll-management-payroll-protocol",
+                        "content": "<h2>Payroll Protocol</h2><p>Details the procedures for salary processing, payment schedules, and deductions. We ensure accurate and timely compensation for all employees.</p><img src=\"/uploads/placeholder-payroll.jpg\" alt=\"Payroll Protocol\"><p>Understand how your salary is calculated and disbursed.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-payroll-management-salary-increase",
+                        "title": "Salary Increase",
+                        "slug": "policies-payroll-management-salary-increase",
+                        "content": "<h2>Salary Increase Policy</h2><p>This policy outlines the criteria and process for salary reviews and increases, based on performance, market rates, and company policy. We reward hard work and dedication.</p><img src=\"/uploads/placeholder-salary.jpg\" alt=\"Salary Increase\"><p>Learn about opportunities for salary growth and career progression.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-payroll-management-performance-bonus",
+                        "title": "Performance Bonus",
+                        "slug": "policies-payroll-management-performance-bonus",
+                        "content": "<h2>Performance Bonus Policy</h2><p>Details on eligibility and distribution of performance-based bonuses, recognizing exceptional contributions to company goals. We celebrate success and incentivize high achievement.</p><img src=\"/uploads/placeholder-bonus.jpg\" alt=\"Performance Bonus\"><p>Understand how your performance can lead to additional rewards.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-exit-management",
+                "title": "Exit Management",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-exit-management-resignation",
+                        "title": "Resignation",
+                        "slug": "policies-exit-management-resignation",
+                        "content": "<h2>Resignation Policy</h2><p>This policy outlines the procedures for employee resignation, including notice periods and handover processes. We aim for a smooth transition for departing employees.</p><img src=\"/uploads/placeholder-resignation.jpg\" alt=\"Resignation\"><p>Familiarize yourself with the steps involved in resigning from your position.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-exit-management-end-of-contract",
+                        "title": "End of Contract",
+                        "slug": "policies-exit-management-end-of-contract",
+                        "content": "<h2>End of Contract Policy</h2><p>Details the procedures and entitlements for employees at the end of their employment contract. We ensure fair and transparent processes.</p><img src=\"/uploads/placeholder-contract.jpg\" alt=\"End of Contract\"><p>Understand your rights and obligations upon contract completion.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-exit-management-retirement",
+                        "title": "Retirement",
+                        "slug": "policies-exit-management-retirement",
+                        "content": "<h2>Retirement Policy</h2><p>This policy outlines the retirement benefits, eligibility, and transition support for employees reaching retirement age. We celebrate your long-term contributions.</p><img src=\"/uploads/placeholder-retirement.jpg\" alt=\"Retirement\"><p>Plan for your future with our comprehensive retirement benefits.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-exit-management-death",
+                        "title": "Death",
+                        "slug": "policies-exit-management-death",
+                        "content": "<h2>Death in Service Policy</h2><p>Details the support and benefits provided to the families of employees who pass away during their service. We offer compassionate assistance during difficult times.</p><img src=\"/uploads/placeholder-death.jpg\" alt=\"Death in Service\"><p>Understand the provisions for employee families in tragic circumstances.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-exit-management-legal-dismissal",
+                        "title": "Legal Dismissal",
+                        "slug": "policies-exit-management-legal-dismissal",
+                        "content": "<h2>Legal Dismissal Policy</h2><p>This policy outlines the grounds and procedures for legal dismissal, ensuring compliance with labor laws and fair process. We adhere to strict legal standards.</p><img src=\"/uploads/placeholder-dismissal.jpg\" alt=\"Legal Dismissal\"><p>Familiarize yourself with the company's dismissal protocols.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-travel",
+                "title": "Travel",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-travel-local",
+                        "title": "Local",
+                        "slug": "policies-travel-local",
+                        "content": "<h2>Local Travel Policy</h2><p>Guidelines for local business travel, including expense claims, transportation, and accommodation. We ensure efficient and cost-effective travel arrangements.</p><img src=\"/uploads/placeholder-local-travel.jpg\" alt=\"Local Travel\"><p>Understand the procedures for official travel within the region.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-travel-abroad",
+                        "title": "Abroad",
+                        "slug": "policies-travel-abroad",
+                        "content": "<h2>International Travel Policy</h2><p>This policy covers international business travel, including visa requirements, insurance, and per diem allowances. We support global business operations.</p><img src=\"/uploads/placeholder-abroad-travel.jpg\" alt=\"International Travel\"><p>Familiarize yourself with the requirements for international assignments.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-accommodation",
+                "title": "Accommodation",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-accommodation-housing",
+                        "title": "Housing",
+                        "slug": "policies-accommodation-housing",
+                        "content": "<h2>Housing Policy</h2><p>Details on company-provided housing or housing allowances for eligible employees. We aim to provide comfortable living arrangements for our staff.</p><img src=\"/uploads/placeholder-housing.jpg\" alt=\"Housing\"><p>Understand the options and support available for your accommodation needs.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-accommodation-pets",
+                        "title": "Pets",
+                        "slug": "policies-accommodation-pets",
+                        "content": "<h2>Pet Policy (Accommodation)</h2><p>This policy outlines guidelines for keeping pets in company-provided accommodation. We aim to balance pet ownership with community living standards.</p><img src=\"/uploads/placeholder-pets.jpg\" alt=\"Pets\"><p>Familiarize yourself with the rules and responsibilities of pet ownership in company housing.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-company-vehicles",
+                "title": "Company Vehicles",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-company-vehicles-eligibility",
+                        "title": "Eligibility",
+                        "slug": "policies-company-vehicles-eligibility",
+                        "content": "<h2>Company Vehicle Eligibility</h2><p>This policy defines the criteria for employees eligible for company vehicles, based on job role and operational needs. We provide transport solutions for business requirements.</p><img src=\"/uploads/placeholder-eligibility.jpg\" alt=\"Vehicle Eligibility\"><p>Understand the requirements for obtaining a company vehicle.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-company-vehicles-accidents",
+                        "title": "Accidents",
+                        "slug": "policies-company-vehicles-accidents",
+                        "content": "<h2>Vehicle Accident Policy</h2><p>Procedures to follow in case of a company vehicle accident, including reporting, insurance claims, and damage assessment. Safety is our priority.</p><img src=\"/uploads/placeholder-accident.jpg\" alt=\"Vehicle Accident\"><p>Familiarize yourself with the steps to take in an accident.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-company-vehicles-traffic-violations",
+                        "title": "Traffic Violations",
+                        "slug": "policies-company-vehicles-traffic-violations",
+                        "content": "<h2>Traffic Violations Policy</h2><p>This policy addresses responsibilities for traffic violations incurred while driving company vehicles. We expect adherence to all traffic laws.</p><img src=\"/uploads/placeholder-traffic.jpg\" alt=\"Traffic Violations\"><p>Understand the consequences of traffic infractions in company vehicles.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-company-vehicles-misuse",
+                        "title": "Misuse",
+                        "slug": "policies-company-vehicles-misuse",
+                        "content": "<h2>Vehicle Misuse Policy</h2><p>Guidelines on the proper use of company vehicles and consequences for misuse. Company vehicles are for official business purposes only.</p><img src=\"/uploads/placeholder-misuse.jpg\" alt=\"Vehicle Misuse\"><p>Ensure you use company vehicles responsibly and according to policy.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "policies-workplace",
+                "title": "Workplace",
+                "slug": null,
+                "content": null,
+                "published": true,
+                "design": {
+                    "headerColor": "#f8f9fa",
+                    "headerImage": "/uploads/default-header.jpg"
+                },
+                "children": [
+                    {
+                        "id": "policies-workplace-dress-code",
+                        "title": "Dress Code",
+                        "slug": "policies-workplace-dress-code",
+                        "content": "<h2>Dress Code Policy</h2><p>This policy outlines the expected dress code for employees, promoting a professional and appropriate appearance in the workplace. We maintain a respectful and professional environment.</p><img src=\"/uploads/placeholder-dresscode.jpg\" alt=\"Dress Code\"><p>Familiarize yourself with the guidelines for workplace attire.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e3f2fd",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-workplace-alcohol-drugs",
+                        "title": "Alcohol & Drugs",
+                        "slug": "policies-workplace-alcohol-drugs",
+                        "content": "<h2>Alcohol & Drugs Policy</h2><p>Our policy strictly prohibits the use of alcohol and illegal drugs in the workplace, ensuring a safe and productive environment. We are committed to a drug-free workplace.</p><img src=\"/uploads/placeholder-alcohol.jpg\" alt=\"Alcohol & Drugs\"><p>Understand the zero-tolerance policy regarding substance abuse.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-workplace-harassment-violence",
+                        "title": "Harassment & Violence",
+                        "slug": "policies-workplace-harassment-violence",
+                        "content": "<h2>Harassment & Violence Policy</h2><p>This policy outlines our commitment to a workplace free from harassment and violence, detailing reporting procedures and consequences. We foster a respectful and safe environment.</p><img src=\"/uploads/placeholder-harassment.jpg\" alt=\"Harassment & Violence\"><p>Learn how to report incidents and our commitment to protecting employees.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fff3e0",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-workplace-bullying",
+                        "title": "Bullying",
+                        "slug": "policies-workplace-bullying",
+                        "content": "<h2>Anti-Bullying Policy</h2><p>Our policy prohibits bullying in all its forms, promoting a supportive and inclusive workplace culture. We encourage open communication and mutual respect.</p><img src=\"/uploads/placeholder-bullying.jpg\" alt=\"Bullying\"><p>Understand our stance against bullying and how to seek support.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#fbe9e7",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-workplace-disclosure",
+                        "title": "Disclosure",
+                        "slug": "policies-workplace-disclosure",
+                        "content": "<h2>Disclosure Policy</h2><p>This policy outlines guidelines for disclosing conflicts of interest, confidential information, and other relevant matters. Transparency and integrity are key.</p><img src=\"/uploads/placeholder-disclosure.jpg\" alt=\"Disclosure\"><p>Familiarize yourself with the requirements for ethical disclosure.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e0f7fa",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    },
+                    {
+                        "id": "policies-workplace-discrimination",
+                        "title": "Discrimination",
+                        "slug": "policies-workplace-discrimination",
+                        "content": "<h2>Anti-Discrimination Policy</h2><p>Our policy prohibits discrimination based on any protected characteristic, ensuring equal treatment and opportunities for all employees. Diversity and inclusion are fundamental values.</p><img src=\"/uploads/placeholder-discrimination.jpg\" alt=\"Discrimination\"><p>Learn about our commitment to a fair and equitable workplace.</p>",
+                        "published": true,
+                        "design": {
+                            "headerColor": "#e8f5e9",
+                            "headerImage": "/uploads/default-header.jpg"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "our-team",
+        "title": "Our Team",
+        "slug": null,
+        "content": null,
+        "published": true,
+        "design": {
+            "headerColor": "#f8f9fa",
+            "headerImage": "/uploads/default-header.jpg"
+        },
+        "children": [
+            {
+                "id": "our-team-hr-team",
+                "title": "HR Team",
+                "slug": "our-team-hr-team",
+                "content": "<h2>Meet the HR Team</h2><p>Our dedicated HR team is here to support all employees with their professional and personal needs. We are committed to fostering a positive and productive work environment.</p><img src=\"/uploads/placeholder-hr-team.jpg\" alt=\"HR Team\"><p>Contact us for assistance with benefits, policies, career development, and more.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e3f2fd",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            }
+        ]
+    },
+    {
+        "id": "contacts",
+        "title": "Contacts",
+        "slug": null,
+        "content": null,
+        "published": true,
+        "design": {
+            "headerColor": "#f8f9fa",
+            "headerImage": "/uploads/default-header.jpg"
+        },
+        "children": [
+            {
+                "id": "contacts-one-pagers-important-contacts",
+                "title": "One pagers important Contacts",
+                "slug": "contacts-one-pagers-important-contacts",
+                "content": "<h2>Important Contacts</h2><p>A comprehensive list of important contacts within Somabay, including emergency numbers, department heads, and key service providers. Keep this page handy for quick reference.</p><ul><li><strong>Emergency Services:</strong> [Phone Number]</li><li><strong>HR Department:</strong> [Phone Number], [Email Address]</li><li><strong>IT Support:</strong> [Phone Number], [Email Address]</li><li><strong>Security:</strong> [Phone Number]</li></ul><p>For a full directory, please refer to the internal contact system.</p>",
+                "published": true,
+                "design": {
+                    "headerColor": "#e8f5e9",
+                    "headerImage": "/uploads/default-header.jpg"
+                }
+            }
+        ]
+    }
+]

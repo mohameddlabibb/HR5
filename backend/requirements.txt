@@ -1,0 +1,7 @@
+# backend/requirements.txt
+# Python dependencies for the Flask backend.
+
+Flask==2.3.2
+Werkzeug==2.3.7
+Flask-Cors==3.0.10
+python-dotenv==1.0.0

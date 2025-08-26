@@ -1,0 +1,7 @@
+{
+    "python.pythonPath": "E:/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "E:/Scripts/Lib/site-packages"
+    ],
+    "python.analysis.autoSearchPaths": true
+}
