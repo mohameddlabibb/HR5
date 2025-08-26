@@ -5,162 +5,76 @@
 document.addEventListener('DOMContentLoaded', () => {
     const sidebarMenu = document.getElementById('sidebar-menu');
     const pageTitleElement = document.getElementById('page-title');
-    const headerImageElement = document.getElementById('header-image');
     const pageContentElement = document.getElementById('page-content');
-    const contentHeaderElement = document.getElementById('content-header');
-    const metaDescriptionElement = document.querySelector('meta[name="description"]');
-    const metaKeywordsElement = document.querySelector('meta[name="keywords"]');
+    const breadcrumbsElement = document.getElementById('breadcrumbs');
 
-    let sidebarData = []; // Stores the full sidebar structure
-
-// Adjust this if your backend runs somewhere else
-const API_BASE_URL = "http://localhost:5000";
-
-/**
- * Fetches the sidebar data from the backend API.
- * @returns {Promise<Array>} A promise that resolves with the sidebar data.
- */
-async function fetchSidebar() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/sidebar`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    // Function to fetch JSON data
+    async function fetchPagesData() {
+        try {
+            const response = await fetch('/data/pages.json'); // Absolute path from server root
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log('Fetched pages data:', data); // Log fetched data
+            return data;
+        } catch (error) {
+            console.error('Error fetching pages data:', error);
+            return [];
         }
-        sidebarData = await response.json();
-        renderSidebar(sidebarData, sidebarMenu);
-        handleInitialPageLoad();
-    } catch (error) {
-        console.error('Error fetching sidebar:', error);
-        sidebarMenu.innerHTML = '<p class="text-danger p-3">Failed to load navigation.</p>';
     }
-}
 
-    /**
-     * Renders the sidebar menu recursively.
-     * @param {Array} items - The array of sidebar items (pages or chapters).
-     * @param {HTMLElement} parentElement - The DOM element to append the menu to.
-     */
-    function renderSidebar(items, parentElement) {
-        parentElement.innerHTML = ''; // Clear existing menu
-        items.forEach(item => {
+    // Function to build sidebar menu
+    function buildSidebarMenu(pages, parentElement) {
+        console.log('Building sidebar with pages:', pages); // Log pages being used to build sidebar
+        pages.forEach(page => {
+            if (!page.published) return;
+
             const menuItem = document.createElement('div');
             menuItem.classList.add('menu-item');
 
             const menuLink = document.createElement('a');
-            menuLink.href = item.slug ? `/pages/${item.slug}` : '#'; // Use slug for page links
             menuLink.classList.add('menu-link');
-            menuLink.textContent = item.title;
-            menuLink.dataset.slug = item.slug; // Store slug for easy access
+            menuLink.textContent = page.title;
 
-            // Handle chapter (has children)
-            if (item.children && item.children.length > 0) {
+            if (page.slug) {
+                menuLink.href = `/pages/${page.slug}.html`; // Absolute path from server root
+            } else {
+                menuLink.href = '#'; // Parent items without a specific page
                 menuItem.classList.add('has-children');
-                menuLink.addEventListener('click', (e) => {
-                    e.preventDefault(); // Prevent default link behavior for chapters
-                    menuItem.classList.toggle('expanded');
-                    const submenu = menuItem.querySelector('.submenu');
-                    if (submenu) {
-                        submenu.style.display = menuItem.classList.contains('expanded') ? 'block' : 'none';
-                    }
-                });
-            } else if (item.slug) {
-                // Handle actual page links
-                menuLink.addEventListener('click', (e) => {
-                    e.preventDefault(); // Prevent full page reload
-                    navigateToPage(item.slug);
-                });
+                menuLink.setAttribute('aria-expanded', 'false');
             }
 
             menuItem.appendChild(menuLink);
 
-            if (item.children && item.children.length > 0) {
+            if (page.children && page.children.length > 0) {
+                console.log(`Page "${page.title}" has children:`, page.children); // Log children
                 const submenu = document.createElement('ul');
                 submenu.classList.add('submenu');
-                renderSidebar(item.children, submenu); // Recursively render children
+                buildSidebarMenu(page.children, submenu);
                 menuItem.appendChild(submenu);
-            }
 
+                menuLink.addEventListener('click', (e) => {
+                    console.log('Click event triggered on:', e.target); // Log the clicked element
+                    if (menuLink.getAttribute('href') === '#') {
+                        e.preventDefault();
+                        console.log('Before toggle - expanded:', menuItem.classList.contains('expanded')); // Log before toggle
+                        menuItem.classList.toggle('expanded');
+                        console.log('After toggle - expanded:', menuItem.classList.contains('expanded')); // Log after toggle
+                        menuLink.setAttribute('aria-expanded', menuItem.classList.contains('expanded') ? 'true' : 'false');
+                    }
+                });
+            }
             parentElement.appendChild(menuItem);
         });
     }
 
     /**
-     * Handles initial page load based on the URL hash or path.
+     * Highlights the active link in the sidebar menu based on the current URL.
      */
-    function handleInitialPageLoad() {
-        const path = window.location.pathname;
-        const slugMatch = path.match(/\/pages\/(.*)/);
-        if (slugMatch && slugMatch[1]) {
-            navigateToPage(slugMatch[1], false); // Load page without pushing to history again
-        } else {
-            // Optionally load a default homepage if no slug is present
-            // For now, the index.html already has placeholder content.
-            // We could fetch a specific 'home' page if it existed in pages.json
-        }
-    }
+    function highlightActiveLink() {
+        const currentPath = window.location.pathname;
 
-    /**
-     * Navigates to a specific page by slug, updates URL, and loads content.
-     * @param {string} slug - The slug of the page to navigate to.
-     * @param {boolean} pushState - Whether to push a new state to browser history (default: true).
-     */
-    async function navigateToPage(slug, pushState = true) {
-        try {
-            // Fetch page content from backend
-            const response = await fetch(`/api/pages/${slug}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const page = await response.json();
-
-            // Update URL
-            if (pushState) {
-                window.history.pushState({ slug: page.slug }, page.title, `/pages/${page.slug}`);
-            }
-
-            // Update page title and content
-            pageTitleElement.textContent = page.title;
-            pageContentElement.innerHTML = page.content;
-
-            // Update meta tags
-            if (metaDescriptionElement) {
-                metaDescriptionElement.setAttribute('content', page.meta_description || '');
-            }
-            if (metaKeywordsElement) {
-                metaKeywordsElement.setAttribute('content', page.meta_keywords || '');
-            }
-
-            // Update header image and color
-            if (page.design) {
-                contentHeaderElement.style.setProperty('--header-color', page.design.headerColor || '#f8f9fa');
-                if (page.design.headerImage) {
-                    headerImageElement.src = page.design.headerImage;
-                    headerImageElement.style.display = 'block';
-                } else {
-                    headerImageElement.style.display = 'none';
-                }
-            } else {
-                contentHeaderElement.style.setProperty('--header-color', '#f8f9fa');
-                headerImageElement.style.display = 'none';
-            }
-
-            highlightActiveLink(slug); // Highlight active link in sidebar
-        } catch (error) {
-            console.error('Error loading page content:', error);
-            pageTitleElement.textContent = 'Page Not Found';
-            pageContentElement.innerHTML = '<p class="text-danger">The requested page could not be loaded.</p>';
-            headerImageElement.style.display = 'none';
-            contentHeaderElement.style.setProperty('--header-color', '#f8f9fa');
-            if (metaDescriptionElement) metaDescriptionElement.setAttribute('content', '');
-            if (metaKeywordsElement) metaKeywordsElement.setAttribute('content', '');
-        }
-    }
-
-    /**
-     * Highlights the active link in the sidebar menu.
-     * @param {string} activeSlug - The slug of the currently active page.
-     */
-    function highlightActiveLink(activeSlug) {
         // Remove active class from all links
         document.querySelectorAll('.sidebar-menu .menu-link, .sidebar-menu .submenu-link').forEach(link => {
             link.classList.remove('active');
@@ -174,12 +88,20 @@ async function fetchSidebar() {
         });
 
         // Find and add active class to the current page's link
-        const currentLink = document.querySelector(`.sidebar-menu a[data-slug="${activeSlug}"]`);
-        if (currentLink) {
-            currentLink.classList.add('active');
+        // Adjust for '/pages/slug.html' or '/index.html'
+        let activeLink = null;
+        if (currentPath === '/index.html' || currentPath === '/') {
+            activeLink = document.querySelector('.sidebar-menu a[href="/index.html"]'); // Absolute path
+        } else {
+            // For static pages, the href will be /pages/slug.html
+            activeLink = document.querySelector(`.sidebar-menu a[href="${currentPath}"]`); // Absolute path
+        }
+        
+        if (activeLink) {
+            activeLink.classList.add('active');
 
             // Expand parent menus if necessary
-            let parent = currentLink.closest('.submenu');
+            let parent = activeLink.closest('.submenu');
             while (parent) {
                 const parentMenuItem = parent.closest('.menu-item.has-children');
                 if (parentMenuItem) {
@@ -193,32 +115,59 @@ async function fetchSidebar() {
         }
     }
 
-    // Handle browser's back/forward buttons
-    window.addEventListener('popstate', (event) => {
-        const path = window.location.pathname;
-        const slugMatch = path.match(/\/pages\/(.*)/);
-        if (slugMatch && slugMatch[1]) {
-            navigateToPage(slugMatch[1], false); // Load page without pushing to history again
-        } else {
-            // If navigating back to root, reset content or load default
-            pageTitleElement.textContent = 'Welcome to Somabay Handbook';
-            pageContentElement.innerHTML = `
-                <p>Select an item from the sidebar to view its content.</p>
-                <p>This is a placeholder for the main content area. The actual content will be loaded dynamically based on your selection in the sidebar navigation.</p>
-                <p>Here's a placeholder image:</p>
-                <img src="/uploads/placeholder-image.jpg" alt="Placeholder Content Image" class="img-fluid content-image">
-                <p>And a placeholder video:</p>
-                <div class="video-container">
-                    <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-            `;
-            headerImageElement.src = "/uploads/default-header.jpg";
-            headerImageElement.style.display = 'block';
-            contentHeaderElement.style.setProperty('--header-color', '#f8f9fa');
-            highlightActiveLink(null); // Clear active highlight
-        }
-    });
+    // Function to load page content dynamically
+    async function loadPageContent(pagePath) {
+        try {
+            const response = await fetch(pagePath);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const contentSection = doc.querySelector('.content-section');
+            const pageTitle = doc.querySelector('h1'); 
+            const breadcrumbContent = doc.querySelector('.breadcrumb');
 
-    // Initial fetch and render
-    fetchSidebar();
+            if (pageTitleElement) {
+                pageTitleElement.textContent = pageTitle ? pageTitle.textContent : 'Page Not Found';
+            }
+            if (pageContentElement) {
+                pageContentElement.innerHTML = contentSection ? contentSection.innerHTML : '<p>Content not found.</p>';
+            }
+            if (breadcrumbsElement) {
+                breadcrumbsElement.innerHTML = breadcrumbContent ? breadcrumbContent.innerHTML : '';
+            }
+
+        } catch (error) {
+            console.error('Error loading page content:', error);
+            if (pageTitleElement) pageTitleElement.textContent = 'Error';
+            if (pageContentElement) pageContentElement.innerHTML = '<p>Failed to load content.</p>';
+        }
+    }
+
+    // Load sidebar and then highlight
+    fetchPagesData().then(pagesData => {
+        buildSidebarMenu(pagesData, sidebarMenu);
+        highlightActiveLink();
+        
+        // Add event listeners for sidebar links to load content
+        sidebarMenu.addEventListener('click', (e) => {
+            const link = e.target.closest('.menu-link, .submenu-link');
+            if (link && link.href && link.getAttribute('href') !== '#') {
+                e.preventDefault();
+                const pagePath = link.getAttribute('href');
+                history.pushState(null, '', pagePath); // Update URL without full reload
+                loadPageContent(pagePath);
+                highlightActiveLink();
+            }
+        });
+
+        // Re-highlight and load content on browser history navigation (back/forward)
+        window.addEventListener('popstate', () => {
+            highlightActiveLink();
+            const popStatePath = window.location.pathname === '/' ? '/index.html' : window.location.pathname;
+            loadPageContent(popStatePath);
+        });
+    });
 });

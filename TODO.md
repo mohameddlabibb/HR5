@@ -1,0 +1,4 @@
+- [ ] Create HTML/CSS pages for the admin panel after login.
+- [ ] Create HTML/CSS pages for the pages in `pages.json`.
+- [ ] Add simple clickable breadcrumbs to the website.
+- [ ] Update the README file after finishing each task.

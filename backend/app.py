@@ -20,7 +20,7 @@ from config import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../public', static_url_path='/public')
 # Enable CORS for all origins. In a production environment, you should restrict this
 # to specific origins (e.g., your frontend URL).
 CORS(app)
@@ -56,7 +56,21 @@ def read_pages_data():
     if not os.path.exists(PAGES_FILE):
         return []
     with open(PAGES_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        data = json.load(f)
+        # Prepend '/public' to image paths
+        def update_image_paths(items):
+            for item in items:
+                if isinstance(item, dict):
+                    if 'design' in item and isinstance(item['design'], dict):
+                        if 'headerImage' in item['design'] and item['design']['headerImage'] and not item['design']['headerImage'].startswith('/public'):
+                            item['design']['headerImage'] = '/public' + item['design']['headerImage']
+                    if 'content' in item and isinstance(item['content'], str):
+                        item['content'] = item['content'].replace('src="/uploads', 'src="/public/uploads')
+                    for key, value in item.items():
+                        if isinstance(value, list):
+                            update_image_paths(value)
+        update_image_paths(data)
+        return data
 
 def write_pages_data(data):
     """Writes the pages data to the JSON file."""
@@ -304,21 +318,6 @@ def get_sidebar():
     print(f"Public Sidebar Data: {public_sidebar}") # Debugging line
     return jsonify(public_sidebar)
 
-@app.route('/api/pages/<slug>', methods=['GET'])
-def get_page_content(slug):
-    """
-    GET /api/pages/<slug>
-    Returns the content of a specific page by its slug.
-    This endpoint is public and does not require authentication.
-    """
-    pages = read_pages_data()
-    # Flatten the structure to find the page by slug
-    all_pages = flatten_sidebar(pages)
-    page = next((p for p in all_pages if p.get('slug') == slug and p.get('published', False)), None)
-
-    if page:
-        return jsonify(page)
-    return jsonify({'message': 'Page not found or not published'}), 404
 
 @app.route('/api/admin/settings', methods=['GET'])
 @token_required
@@ -478,7 +477,7 @@ def admin_login():
 
     if user and check_password_hash(user[2], password):
         session['username'] = username
-        return jsonify({'message': 'Login successful', 'access_token': 'admin-token-placeholder'}), 200
+        return jsonify({'message': 'Login successful', 'access_token': 'admin-token-placeholder', 'redirect': '/admin_panel'}), 200
     return jsonify({'message': 'Invalid credentials'}), 401
 
 @app.route('/api/admin/widgets', methods=['GET'])
@@ -750,7 +749,7 @@ def reorder_sidebar():
     current_sidebar = read_pages_data()
     updated_sidebar = reorder_sidebar_structure(current_sidebar, new_order)
 
-    write_pages_data(pager)
+    write_pages_data(updated_sidebar)
     return jsonify({'message': 'Sidebar order updated successfully'}), 200
 
 @app.route('/api/admin/pages/<page_id>/design', methods=['PUT'])
@@ -786,6 +785,12 @@ def update_page_design(page_id):
 @token_required
 def upload_image():
     """
+
+@app.route('/admin_panel')
+def admin_panel():
+    if 'username' in session:
+        return send_from_directory('../public', 'admin_panel.html')
+    return 'You are not logged in'
     POST /api/admin/upload
     Handles image uploads to the public/uploads directory. Requires authentication.
     """
@@ -804,6 +809,32 @@ def upload_image():
         # Return the public URL for the uploaded file
         return jsonify({'message': 'File uploaded successfully', 'file_path': f'/uploads/{filename}'}), 200
     return jsonify({'message': 'File upload failed'}), 500
+
+@app.route('/')
+def serve_index():
+    """
+    Serves the main index.html file from the public/pages directory.
+    """
+    return send_from_directory(os.path.join(app.static_folder, 'pages'), 'index.html')
+
+@app.route('/pages/<path:filename>')
+def serve_static_page(filename):
+    """
+    Serves static HTML pages from the public/pages directory.
+    """
+    return send_from_directory(os.path.join(app.static_folder, 'pages'), filename)
+
+# Example 301 Redirect (uncomment and modify as needed)
+# @app.route('/old-placeholder-url')
+# def old_url_redirect():
+#     return redirect('/pages/new-page-slug.html', code=301)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """
+    Custom 404 error handler.
+    """
+    return send_from_directory(os.path.join(app.static_folder, 'pages'), '404.html'), 404
 
 # --- Run the Flask app ---
 if __name__ == '__main__':

@@ -1,0 +1,98 @@
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Container for content */
+.container {
+    width: 80%;
+    margin: 20px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Styles */
+h1, h2, h3 {
+    color: #0056b3;
+    margin-bottom: 15px;
+}
+
+h1 {
+    font-size: 2.5em;
+    text-align: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+h2 {
+    font-size: 2em;
+    color: #007bff;
+}
+
+h3 {
+    font-size: 1.5em;
+    color: #007bff;
+}
+
+/* Paragraph Styles */
+p {
+    margin-bottom: 10px;
+}
+
+/* List Styles */
+ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    margin-bottom: 10px;
+}
+
+ul ul {
+    list-style-type: circle;
+    margin-left: 30px;
+}
+
+/* Navigation/Breadcrumbs (if any) */
+.breadcrumb {
+    padding: 10px 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* Specific content styling for the HR pages */
+.content-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-left: 5px solid #007bff;
+    border-radius: 5px;
+}
+
+.content-section h3 {
+    margin-top: 0;
+}
+
+/* Footer Styles */
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 30px;
+    color: #777;
+    font-size: 0.8em;
+    border-top: 1px solid #eee;
+}

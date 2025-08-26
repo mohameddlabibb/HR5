@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block meta_description %}{{ page.meta_description | default(super()) }}{% endblock %}
+{% block meta_keywords %}{{ page.meta_keywords | default(super()) }}{% endblock %}
+{% block title %}{{ page.title | default(super()) }}{% endblock %}
+{% block custom_css %}{{ page.custom_css | default(super()) }}{% endblock %}
+
+{% block breadcrumbs %}
+    <ol class="breadcrumb">
+        {% for crumb in breadcrumbs %}
+            {% if loop.last %}
+                <li class="breadcrumb-item active" aria-current="page">{{ crumb.title }}</li>
+            {% else %}
+                <li class="breadcrumb-item"><a href="{{ crumb.url }}">{{ crumb.title }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+{% endblock %}
+
+{% block page_title %}{{ page.title }}{% endblock %}
+
+{% block header_image %}
+    {% if page.design.headerImage %}
+    <img id="header-image" src="{{ page.design.headerImage }}" alt="Header Image" class="img-fluid header-image">
+    {% endif %}
+{% endblock %}
+
+{% block page_content %}
+    {{ page.content | safe }}
+{% endblock %}

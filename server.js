@@ -16,6 +16,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // This allows images uploaded via the admin panel to be served publicly.
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
+// Serve data files from the 'data' directory
+app.use('/data', express.static(path.join(__dirname, 'data')));
+
 // Route for the admin panel
 // When a request comes to '/admin', serve the 'admin.html' file.
 app.get('/admin', (req, res) => {
