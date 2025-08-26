@@ -78,12 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove active class from all links
         document.querySelectorAll('.sidebar-menu .menu-link, .sidebar-menu .submenu-link').forEach(link => {
             link.classList.remove('active');
-            // Also collapse all submenus first
+            // Collapse all submenus first by removing the 'expanded' class
             const parentMenuItem = link.closest('.menu-item.has-children');
             if (parentMenuItem) {
                 parentMenuItem.classList.remove('expanded');
-                const submenu = parentMenuItem.querySelector('.submenu');
-                if (submenu) submenu.style.display = 'none';
             }
         });
 
@@ -106,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parentMenuItem = parent.closest('.menu-item.has-children');
                 if (parentMenuItem) {
                     parentMenuItem.classList.add('expanded');
-                    parent.style.display = 'block';
                     parent = parentMenuItem.closest('.submenu'); // Continue up the hierarchy
                 } else {
                     parent = null;
