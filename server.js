@@ -10,7 +10,16 @@ const PORT = process.env.PORT || 3000;
 // Serve static files from the 'public' directory
 // This middleware makes all files in the 'public' folder accessible directly via their URL.
 // For example, 'public/index.html' can be accessed at '/index.html'.
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+    setHeaders: function (res, filePath) {
+        if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+		if (filePath.endsWith('admin.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 
 // Serve uploaded images from the 'public/uploads' directory
 // This allows images uploaded via the admin panel to be served publicly.
@@ -23,6 +32,10 @@ app.use('/data', express.static(path.join(__dirname, 'data')));
 // When a request comes to '/admin', serve the 'admin.html' file.
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/admin_panel', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin_panel.html'));
 });
 
 // Catch-all route for client-side routing

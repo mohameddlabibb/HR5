@@ -3,11 +3,11 @@
 # Provides API endpoints for managing handbook content, sidebar structure, and admin authentication.
 
 import os
-from pydoc import pager
 import sys
 sys.path.append('.')
 import json
 import uuid
+import secrets
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory, session, g
 from flask_cors import CORS
@@ -17,6 +17,8 @@ import sqlite3
 
 # Import admin credentials from config.py
 from config import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
+# Import database helper functions
+from database import create_connection, add_page_db, get_all_pages_db, get_page_by_id_db, get_page_by_slug_db, update_page_db, delete_page_db
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -42,40 +44,11 @@ def close_connection(exception):
         db.close()
 
 # --- Configuration ---
-DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
-PAGES_FILE = os.path.join(DATA_DIR, 'pages.json')
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), '..', 'public', 'uploads')
 # Ensure directories exist
-os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 # --- Helper Functions ---
-
-def read_pages_data():
-    """Reads the pages data from the JSON file."""
-    if not os.path.exists(PAGES_FILE):
-        return []
-    with open(PAGES_FILE, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-        # Prepend '/public' to image paths
-        def update_image_paths(items):
-            for item in items:
-                if isinstance(item, dict):
-                    if 'design' in item and isinstance(item['design'], dict):
-                        if 'headerImage' in item['design'] and item['design']['headerImage'] and not item['design']['headerImage'].startswith('/public'):
-                            item['design']['headerImage'] = '/public' + item['design']['headerImage']
-                    if 'content' in item and isinstance(item['content'], str):
-                        item['content'] = item['content'].replace('src="/uploads', 'src="/public/uploads')
-                    for key, value in item.items():
-                        if isinstance(value, list):
-                            update_image_paths(value)
-        update_image_paths(data)
-        return data
-
-def write_pages_data(data):
-    """Writes the pages data to the JSON file."""
-    with open(PAGES_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
 
 def find_item_in_sidebar(items, item_id):
     """Recursively finds an item by its ID in the sidebar structure."""
@@ -142,30 +115,19 @@ def update_item_in_sidebar(items, updated_item_data):
                 return True
     return False
 
-def reorder_sidebar_structure(current_sidebar, new_order_list):
+def build_nested_pages(flat_pages, parent_id=None):
     """
-    Reorders the sidebar structure based on a new order list.
-    This function is complex as it needs to handle nested structures.
+    Builds a nested page structure from a flat list of pages.
+    Assumes pages have 'id', 'parent_id', and 'is_chapter' fields.
     """
-    # Create a dictionary for quick lookup of items by ID
-    item_map = {item['id']: item for item in flatten_sidebar(current_sidebar)}
-
-    def build_nested_order(order_list):
-        new_nested_items = []
-        for ordered_item in order_list:
-            item_id = ordered_item['id']
-            original_item = item_map.get(item_id)
-            if original_item:
-                # Create a copy to avoid modifying the original item_map reference directly
-                new_item = original_item.copy()
-                if 'children' in ordered_item:
-                    new_item['children'] = build_nested_order(ordered_item['children'])
-                elif 'children' in new_item: # If original had children but new order doesn't specify, keep them
-                    pass # Keep existing children if not explicitly reordered
-                new_nested_items.append(new_item)
-        return new_nested_items
-
-    return build_nested_order(new_order_list)
+    nested_items = []
+    for page in flat_pages:
+        if page['parent_id'] == parent_id:
+            new_item = page.copy()
+            if new_item['is_chapter']:
+                new_item['children'] = build_nested_pages(flat_pages, new_item['id'])
+            nested_items.append(new_item)
+    return nested_items
 
 # --- Database Helper Functions for Settings ---
 
@@ -278,13 +240,22 @@ def token_required(f):
 
         try:
             token_type, token = auth_header.split()
-            if token_type.lower() != 'bearer' or token != 'admin-token-placeholder': # Simple token check
+            if token_type.lower() != 'bearer':
+                return jsonify({'message': 'Invalid token type!'}), 401
+
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE token = ?", (token,))
+            user = cursor.fetchone()
+
+            if not user:
                 return jsonify({'message': 'Invalid token!'}), 401
+
+            # Store the username in the request context for later use if needed
+            g.username = user['username']
         except ValueError:
             return jsonify({'message': 'Invalid Authorization header format!'}), 401
 
-        # In a real application, you would decode and validate a JWT here.
-        # For this project, we're using a simple placeholder token.
         return f(*args, **kwargs)
     return decorated
 
@@ -292,13 +263,17 @@ def token_required(f):
 
 @app.route('/api/sidebar', methods=['GET'])
 def get_sidebar():
-    
     """
     GET /api/sidebar
-    Returns the complete sidebar navigation structure from pages.json.
+    Returns the complete sidebar navigation structure from the database.
     This endpoint is public and does not require authentication.
     """
-    pages = read_pages_data()
+    conn = get_db()
+    flat_pages = get_all_pages_db(conn)
+    
+    # Build the nested structure from the flat list
+    nested_pages = build_nested_pages(flat_pages)
+
     # Filter out draft pages for public view
     def filter_published(items):
         filtered = []
@@ -311,10 +286,9 @@ def get_sidebar():
                     filtered.append(new_item)
             except Exception as e:
                 print(f"Error filtering item {item.get('id', 'unknown')}: {e}")
-                # Optionally, you could log this error more formally or skip the item
         return filtered
     
-    public_sidebar = filter_published(pages)
+    public_sidebar = filter_published(nested_pages)
     print(f"Public Sidebar Data: {public_sidebar}") # Debugging line
     return jsonify(public_sidebar)
 
@@ -453,7 +427,7 @@ def update_single_menu(name):
 def delete_single_menu(name):
     """
     DELETE /api/admin/menus/<name>
-    Deletes a menu by name. Requires authentication.
+    Deletes a menu by its name. Requires authentication.
     """
     if delete_menu(name):
         return jsonify({'message': 'Menu deleted successfully', 'name': name}), 200
@@ -475,9 +449,21 @@ def admin_login():
     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
 
-    if user and check_password_hash(user[2], password):
-        session['username'] = username
-        return jsonify({'message': 'Login successful', 'access_token': 'admin-token-placeholder', 'redirect': '/admin_panel'}), 200
+    if user:
+        print(f"User found: {username}")
+        if check_password_hash(user[2], password):
+            print("Password hash matches")
+            session['username'] = username
+            token = secrets.token_hex(32)  # Generate a secure token
+            # Store the token in the database (or a more secure storage)
+            cursor.execute("UPDATE users SET token = ? WHERE username = ?", (token, username))
+            conn.commit()
+            session['adminToken'] = token  # Store the token in the session
+            return jsonify({'message': 'Login successful', 'access_token': token}), 200
+        else:
+            print("Password hash does not match")
+    else:
+        print(f"User not found: {username}")
     return jsonify({'message': 'Invalid credentials'}), 401
 
 @app.route('/api/admin/widgets', methods=['GET'])
@@ -551,7 +537,7 @@ def update_single_widget(name):
 def delete_single_widget(name):
     """
     DELETE /api/admin/widgets/<name>
-    Deletes a widget by name. Requires authentication.
+    Deletes a widget by its name. Requires authentication.
     """
     if delete_widget(name):
         return jsonify({'message': 'Widget deleted successfully', 'name': name}), 200
@@ -576,74 +562,30 @@ def add_page():
     meta_keywords = data.get('meta_keywords', '')
     custom_css = data.get('custom_css', '')
 
-    if not title or (not is_chapter and not slug): # Slug is not required for chapters
-        return jsonify({'message': 'Title and slug (for pages) are required'}), 400
-    if not is_chapter and not content: # Content is required for pages
+
+    # Validate input
+    if not title:
+        return jsonify({'message': 'Title is required'}), 400
+    if not is_chapter and not slug:
+        return jsonify({'message': 'Slug is required for pages'}), 400
+    if not is_chapter and not content:
         return jsonify({'message': 'Content is required for pages'}), 400
-    if is_chapter and slug: # Chapters should not have slugs
+    if is_chapter and slug:
         return jsonify({'message': 'Chapters should not have slugs'}), 400
-    if is_chapter and content: # Chapters should not have content
+    if is_chapter and content:
         return jsonify({'message': 'Chapters should not have content directly'}), 400
 
-    pages = read_pages_data()
+    conn = get_db()
     # Check for duplicate slug only if it's a page
-    if slug and any(p.get('slug') == slug for p in flatten_sidebar(pages)):
-        return jsonify({'message': 'Slug already exists. Please choose a unique slug.'}), 409
-    content = data.get('content', '')
-    published = data.get('published', False)
-    is_chapter = data.get('is_chapter', False)
-    parent_id = data.get('parent_id')
-    design = data.get('design', {})
-    meta_description = data.get('meta_description', '')
-    meta_keywords = data.get('meta_keywords', '')
-    custom_css = data.get('custom_css', '')
-
-    if not title or (not is_chapter and not slug): # Slug is not required for chapters
-        return jsonify({'message': 'Title and slug (for pages) are required'}), 400
-    if not is_chapter and not content: # Content is required for pages
-        return jsonify({'message': 'Content is required for pages'}), 400
-    if is_chapter and slug: # Chapters should not have slugs
-        return jsonify({'message': 'Chapters should not have slugs'}), 400
-    if is_chapter and content: # Chapters should not have content
-        return jsonify({'message': 'Chapters should not have content directly'}), 400
-
-    pages = read_pages_data()
-    # Check for duplicate slug only if it's a page
-    if slug and any(p.get('slug') == slug for p in flatten_sidebar(pages)):
+    if slug and get_page_by_slug_db(conn, slug):
         return jsonify({'message': 'Slug already exists. Please choose a unique slug.'}), 409
 
-    pages = read_pages_data()
-    # Check for duplicate slug
-    if any(p.get('slug') == slug for p in flatten_sidebar(pages)):
-        return jsonify({'message': 'Slug already exists. Please choose a unique slug.'}), 409
+    page_id = str(uuid.uuid4()) # Generate unique ID
 
-    new_item = {
-        'id': str(uuid.uuid4()), # Generate unique ID
-        'title': title,
-        'slug': slug if not is_chapter else None, # Chapters don't have slugs
-        'content': content if not is_chapter else None, # Chapters don't have content
-        'published': published,
-        'design': design,
-        'meta_description': meta_description,
-        'meta_keywords': meta_keywords,
-        'custom_css': custom_css
-    }
-    if is_chapter:
-        new_item['children'] = [] # Initialize children list for chapters
-        new_item['slug'] = None # Ensure chapters don't have slugs
-        new_item['content'] = None # Ensure chapters don't have content
+    add_page_db(conn, page_id, title, slug if not is_chapter else None, content if not is_chapter else None,
+                published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css)
 
-    if parent_id:
-        parent_item = find_item_in_sidebar(pages, parent_id)
-        if parent_item and 'children' in parent_item:
-            parent_item['children'].append(new_item)
-        else:
-            return jsonify({'message': 'Parent not found or is not a chapter'}), 400
-    else:
-        pages.append(new_item)
-
-    write_pages_data(pages)
-    return jsonify({'message': 'Page/Chapter added successfully', 'page_id': new_item['id']}), 201
+    return jsonify({'message': 'Page/Chapter added successfully', 'page_id': page_id}), 201
 
 @app.route('/api/admin/pages/<slug>', methods=['PUT'])
 @token_required
@@ -653,37 +595,31 @@ def edit_page(slug):
     Edits an existing page by its slug. Requires authentication.
     """
     data = request.get_json()
-    pages = read_pages_data()
-
-    # Find the page by its slug
-    all_pages = flatten_sidebar(pages)
-    page_to_edit = next((p for p in all_pages if p.get('slug') == slug), None)
+    conn = get_db()
+    page_to_edit = get_page_by_slug_db(conn, slug)
 
     if not page_to_edit:
         return jsonify({'message': 'Page not found'}), 404
 
     # Update fields
-    page_to_edit['title'] = data.get('title', page_to_edit['title'])
-    # Allow slug change, but check for duplicates if changed
+    title = data.get('title', page_to_edit['title'])
     new_slug = data.get('slug', page_to_edit['slug'])
+    content = data.get('content', page_to_edit['content'])
+    published = data.get('published', page_to_edit['published'])
+    is_chapter = data.get('is_chapter', page_to_edit['is_chapter'])
+    parent_id = data.get('parent_id', page_to_edit['parent_id'])
+    design = data.get('design', page_to_edit['design'])
+    meta_description = data.get('meta_description', page_to_edit['meta_description'])
+    meta_keywords = data.get('meta_keywords', page_to_edit['meta_keywords'])
+    custom_css = data.get('custom_css', page_to_edit['custom_css'])
+
+    # Allow slug change, but check for duplicates if changed
     if new_slug != page_to_edit['slug']:
-        if any(p.get('slug') == new_slug and p['id'] != page_to_edit['id'] for p in all_pages):
+        if get_page_by_slug_db(conn, new_slug):
             return jsonify({'message': 'New slug already exists. Please choose a unique slug.'}), 409
-        page_to_edit['slug'] = new_slug
 
-    page_to_edit['content'] = data.get('content', page_to_edit['content'])
-    page_to_edit['image'] = data.get('image', page_to_edit.get('image'))
-    page_to_edit['video'] = data.get('video', page_to_edit.get('video'))
-    page_to_edit['published'] = data.get('published', page_to_edit['published'])
-    page_to_edit['design'] = data.get('design', page_to_edit.get('design', {}))
-    page_to_edit['meta_description'] = data.get('meta_description', page_to_edit.get('meta_description', ''))
-    page_to_edit['meta_keywords'] = data.get('meta_keywords', page_to_edit.get('meta_keywords', ''))
-    page_to_edit['custom_css'] = data.get('custom_css', page_to_edit.get('custom_css', ''))
-
-    # Update the nested structure
-    update_item_in_sidebar(pages, page_to_edit) # This will update the actual item in the nested list
-
-    write_pages_data(pages)
+    update_page_db(conn, page_to_edit['id'], title, new_slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css)
+    
     return jsonify({'message': 'Page updated successfully'}), 200
 
 @app.route('/api/admin/pages/<slug>', methods=['DELETE'])
@@ -693,21 +629,13 @@ def delete_page(slug):
     DELETE /api/admin/pages/<slug>
     Deletes a page by its slug. Requires authentication.
     """
-    pages = read_pages_data()
-    all_pages = flatten_sidebar(pages)
-    page_to_delete = next((p for p in all_pages if p.get('slug') == slug), None)
+    conn = get_db()
+    page_to_delete = get_page_by_slug_db(conn, slug)
 
     if not page_to_delete:
         return jsonify({'message': 'Page not found'}), 404
 
-    # Find its parent and remove it
-    parent_item = find_parent_of_item(pages, page_to_delete['id'])
-    if parent_item:
-        remove_item_from_sidebar(parent_item['children'], page_to_delete['id'])
-    else:
-        remove_item_from_sidebar(pages, page_to_delete['id'])
-
-    write_pages_data(pages)
+    delete_page_db(conn, page_to_delete['id'])
     return jsonify({'message': 'Page deleted successfully'}), 200
 
 @app.route('/api/admin/pages/<page_id>/visibility', methods=['PUT'])
@@ -723,14 +651,19 @@ def toggle_page_visibility(page_id):
     if published_status is None or not isinstance(published_status, bool):
         return jsonify({'message': 'Invalid published status provided'}), 400
 
-    pages = read_pages_data()
-    page_to_update = find_item_in_sidebar(pages, page_id)
+    conn = get_db()
+    page_to_update = get_page_by_id_db(conn, page_id)
 
     if not page_to_update:
         return jsonify({'message': 'Page not found'}), 404
 
-    page_to_update['published'] = published_status
-    write_pages_data(pages)
+    # Update only the published status
+    update_page_db(conn, page_to_update['id'], page_to_update['title'], page_to_update['slug'],
+                   page_to_update['content'], published_status, page_to_update['is_chapter'],
+                   page_to_update['parent_id'], page_to_update['design'],
+                   page_to_update['meta_description'], page_to_update['meta_keywords'],
+                   page_to_update['custom_css'])
+    
     return jsonify({'message': 'Page visibility updated successfully', 'published': published_status}), 200
 
 @app.route('/api/admin/sidebar/reorder', methods=['PUT'])
@@ -741,15 +674,29 @@ def reorder_sidebar():
     Reorders the sidebar structure based on the provided new order. Requires authentication.
     """
     data = request.get_json()
-    new_order = data.get('sidebar_order')
+    new_order_list = data.get('sidebar_order')
 
-    if not new_order or not isinstance(new_order, list):
+    if not new_order_list or not isinstance(new_order_list, list):
         return jsonify({'message': 'Invalid sidebar order provided'}), 400
 
-    current_sidebar = read_pages_data()
-    updated_sidebar = reorder_sidebar_structure(current_sidebar, new_order)
+    conn = get_db()
 
-    write_pages_data(updated_sidebar)
+    # Helper to recursively update parent_id
+    def update_parent_ids_recursive(items, parent_id=None):
+        for item in items:
+            page_id = item['id']
+            # Fetch existing page data to preserve all fields
+            existing_page = get_page_by_id_db(conn, page_id)
+            if existing_page:
+                update_page_db(conn, page_id, existing_page['title'], existing_page['slug'],
+                               existing_page['content'], existing_page['published'], existing_page['is_chapter'],
+                               parent_id, existing_page['design'], existing_page['meta_description'],
+                               existing_page['meta_keywords'], existing_page['custom_css'])
+            if 'children' in item and item['children']:
+                update_parent_ids_recursive(item['children'], page_id)
+
+    update_parent_ids_recursive(new_order_list)
+
     return jsonify({'message': 'Sidebar order updated successfully'}), 200
 
 @app.route('/api/admin/pages/<page_id>/design', methods=['PUT'])
@@ -763,34 +710,30 @@ def update_page_design(page_id):
     header_color = data.get('headerColor')
     header_image = data.get('headerImage')
 
-    pages = read_pages_data()
-    page_to_update = find_item_in_sidebar(pages, page_id)
+    conn = get_db()
+    page_to_update = get_page_by_id_db(conn, page_id)
 
     if not page_to_update:
         return jsonify({'message': 'Page not found'}), 404
 
-    if 'design' not in page_to_update:
-        page_to_update['design'] = {}
+    design = page_to_update.get('design', {})
 
     if header_color is not None:
-        page_to_update['design']['headerColor'] = header_color
+        design['headerColor'] = header_color
     if header_image is not None:
-        page_to_update['design']['headerImage'] = header_image
+        design['headerImage'] = header_image
 
-    write_pages_data(pages)
-    return jsonify({'message': 'Page design updated successfully', 'design': page_to_update['design']}), 200
-
+    update_page_db(conn, page_to_update['id'], page_to_update['title'], page_to_update['slug'],
+                   page_to_update['content'], page_to_update['published'], page_to_update['is_chapter'],
+                   page_to_update['parent_id'], design, page_to_update['meta_description'],
+                   page_to_update['meta_keywords'], page_to_update['custom_css'])
+    
+    return jsonify({'message': 'Page design updated successfully', 'design': design}), 200
 
 @app.route('/api/admin/upload', methods=['POST'])
 @token_required
 def upload_image():
     """
-
-@app.route('/admin_panel')
-def admin_panel():
-    if 'username' in session:
-        return send_from_directory('../public', 'admin_panel.html')
-    return 'You are not logged in'
     POST /api/admin/upload
     Handles image uploads to the public/uploads directory. Requires authentication.
     """
@@ -809,6 +752,19 @@ def admin_panel():
         # Return the public URL for the uploaded file
         return jsonify({'message': 'File uploaded successfully', 'file_path': f'/uploads/{filename}'}), 200
     return jsonify({'message': 'File upload failed'}), 500
+
+@app.route('/admin')
+def serve_admin():
+    """
+    Serves the admin.html file from the public directory.
+    """
+    return send_from_directory('../public', 'admin.html')
+
+@app.route('/admin_panel')
+def admin_panel():
+    if 'adminToken' in session:
+        return send_from_directory('../public', 'admin_panel.html')
+    return 'You are not logged in'
 
 @app.route('/')
 def serve_index():

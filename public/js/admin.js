@@ -132,25 +132,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
+        console.log('Attempting login with username:', username); // Debugging
+        console.log('Attempting login with password:', password); // Debugging
+
         try {
-            const response = await fetch('/api/admin/login', {
+            const response = await fetch('http://localhost:5000/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
+            console.log('API response:', data);
 
             if (response.ok) {
                 adminToken = data.access_token;
-                localStorage.setItem('adminToken', adminToken); // Store token
+                localStorage.setItem('adminToken', adminToken);
                 showMessage(loginMessage, 'Login successful!', false);
-                showAdminDashboard();
+                console.log('Redirecting to /admin_panel');
+                window.location.href = '/admin_panel';
             } else {
+                console.log('Login failed:', data.message);
                 showMessage(loginMessage, data.message || 'Login failed.', true);
             }
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('Login error:', error.message, error.stack);
             showMessage(loginMessage, 'An error occurred during login.', true);
         }
     });
@@ -170,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Shows the admin dashboard and hides the login form.
      */
     function showAdminDashboard() {
+        console.log('Showing admin dashboard'); // Debugging
         adminLoginSection.style.display = 'none';
         adminDashboardSection.style.display = 'block';
         loadAdminData(); // Load pages and sidebar structure

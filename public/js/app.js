@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to fetch JSON data
     async function fetchPagesData() {
         try {
-            const response = await fetch('/data/pages.json'); // Absolute path from server root
+            const response = await fetch('data/pages.json'); // Relative path
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
