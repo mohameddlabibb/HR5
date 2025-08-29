@@ -1,0 +1,49 @@
+{
+  "users": {
+    "columns": {
+      "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+      "username": "TEXT NOT NULL UNIQUE",
+      "password": "TEXT NOT NULL",
+      "token": "TEXT UNIQUE",
+      "last_login": "TEXT"
+    }
+  },
+  "menus": {
+    "columns": {
+      "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+      "name": "TEXT NOT NULL UNIQUE",
+      "menu_data": "TEXT NOT NULL"
+    }
+  },
+  "widgets": {
+    "columns": {
+      "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+      "name": "TEXT NOT NULL UNIQUE",
+      "widget_type": "TEXT NOT NULL",
+      "widget_data": "TEXT NOT NULL"
+    }
+  },
+  "pages": {
+    "columns": {
+      "id": "TEXT PRIMARY KEY",
+      "title": "TEXT NOT NULL",
+      "slug": "TEXT UNIQUE",
+      "content": "TEXT",
+      "published": "BOOLEAN NOT NULL",
+      "is_chapter": "BOOLEAN NOT NULL",
+      "parent_id": "TEXT",
+      "design": "TEXT",
+      "meta_description": "TEXT",
+      "meta_keywords": "TEXT",
+      "custom_css": "TEXT",
+      "summary": "TEXT"
+    }
+  },
+  "settings": {
+    "columns": {
+      "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+      "setting_key": "TEXT NOT NULL UNIQUE",
+      "setting_value": "TEXT"
+    }
+  }
+}

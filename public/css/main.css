@@ -20,7 +20,7 @@ body {
 .sidebar {
     width: 280px; /* Fixed width for the sidebar */
     min-width: 280px;
-    background: #2c3e50; /* Dark background for sidebar */
+    background: #00696E; /* Dark background for sidebar */
     color: #ecf0f1; /* Light text color */
     transition: all 0.3s;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
@@ -30,9 +30,9 @@ body {
 
 .sidebar-header {
     padding: 20px;
-    background: #34495e; /* Slightly lighter dark for header */
+    background: #00696E; /* Slightly lighter dark for header */
     text-align: center;
-    border-bottom: 1px solid #4a627a;
+    border-bottom: 1px solid #00696E;
 }
 
 .somabay-logo {
@@ -67,9 +67,8 @@ body {
 
 .sidebar-menu .menu-link:hover,
 .sidebar-menu .menu-link.active {
-    background: #3498db; /* Highlight color on hover/active */
+    background: #004c50; /* Highlight color on hover/active */
     color: #fff;
-    border-radius: 0 25px 25px 0; /* Rounded right edge */
 }
 
 /* Styles for collapsible menu items */
@@ -88,7 +87,7 @@ body {
     list-style: none;
     padding-left: 25px; /* Indent sub-menu items */
     margin: 0;
-    background: #34495e; /* Slightly different background for submenus */
+    background: #00696E; /* Slightly different background for submenus */
     display: none; /* Hidden by default */
 }
 

@@ -14,15 +14,53 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import sqlite3
+import bleach
 
 # Import admin credentials from config.py
-from config import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
+from backend.config import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
 # Import database helper functions
-from database import create_connection, add_page_db, get_all_pages_db, get_page_by_id_db, get_page_by_slug_db, update_page_db, delete_page_db
+from backend.database import create_connection, add_page_db, get_all_pages_db, get_page_by_id_db, get_page_by_slug_db, update_page_db, delete_page_db
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, static_folder='../public', static_url_path='/public')
+
+def generate_breadcrumbs(slug, flat_pages):
+    """Generates breadcrumbs for a given page slug."""
+    breadcrumbs = []
+    print(f"generate_breadcrumbs called with slug: {slug} and flat_pages: {flat_pages}")
+    current_page = next((p for p in flat_pages if p['slug'] == slug), None)
+
+    if not current_page:
+        print(f"Current page not found for slug: {slug}")
+        return breadcrumbs
+
+    print(f"Current page: {current_page}")
+    breadcrumbs.append({'title': 'Home', 'url': '/index.html', 'active': False})
+
+    parent_id = current_page['parent_id']
+    while parent_id:
+        parent_page = next((p for p in flat_pages if p['id'] == parent_id), None)
+        if not parent_page:
+            break
+        breadcrumbs.insert(1, {'title': parent_page['title'], 'url': f"/pages/{parent_page['slug']}", 'active': False})
+        parent_id = parent_page['parent_id']
+
+    breadcrumbs.append({'title': current_page['title'], 'url': None, 'active': True})
+    return breadcrumbs
+
+    breadcrumbs.append({'title': 'Home', 'url': '/index.html', 'active': False})
+
+    parent_id = current_page['parent_id']
+    while parent_id:
+        parent_page = next((p for p in flat_pages if p['id'] == parent_id), None)
+        if not parent_page:
+            break
+        breadcrumbs.insert(1, {'title': parent_page['title'], 'url': f"/pages/{parent_page['slug']}", 'active': False})
+        parent_id = parent_page['parent_id']
+
+    breadcrumbs.append({'title': current_page['title'], 'url': None, 'active': True})
+    return breadcrumbs
 # Enable CORS for all origins. In a production environment, you should restrict this
 # to specific origins (e.g., your frontend URL).
 CORS(app)
@@ -218,7 +256,7 @@ def update_widget(name, widget_type, widget_data):
     cursor = db.cursor()
     cursor.execute("UPDATE widgets SET widget_type = ?, widget_data = ? WHERE name = ?", (widget_type, json.dumps(widget_data), name))
     db.commit()
-    return cursor.rowcount
+    return cur.rowcount
 
 def delete_widget(name):
     """Deletes a widget by its name."""
@@ -226,7 +264,7 @@ def delete_widget(name):
     cursor = db.cursor()
     cursor.execute("DELETE FROM widgets WHERE name = ?", (name,))
     db.commit()
-    return cursor.rowcount
+    return cur.rowcount
 
 # --- Authentication Decorator ---
 
@@ -270,7 +308,7 @@ def get_sidebar():
     """
     conn = get_db()
     flat_pages = get_all_pages_db(conn)
-    
+
     # Build the nested structure from the flat list
     nested_pages = build_nested_pages(flat_pages)
 
@@ -279,7 +317,7 @@ def get_sidebar():
         filtered = []
         for item in items:
             try:
-                if item.get('published', False): # Only include published items
+                if item.get('published', False):  # Only include published items
                     new_item = item.copy()
                     if 'children' in new_item:
                         new_item['children'] = filter_published(new_item['children'])
@@ -287,10 +325,28 @@ def get_sidebar():
             except Exception as e:
                 print(f"Error filtering item {item.get('id', 'unknown')}: {e}")
         return filtered
-    
+
     public_sidebar = filter_published(nested_pages)
-    print(f"Public Sidebar Data: {public_sidebar}") # Debugging line
+    print(f"Public Sidebar Data: {public_sidebar}")  # Debugging line
     return jsonify(public_sidebar)
+
+
+@app.route('/api/pages/<slug>', methods=['GET'])
+def get_page(slug):
+    """
+    GET /api/pages/<slug>
+    Returns a single page by its slug.
+    """
+    conn = get_db()
+    page = get_page_by_slug_db(conn, slug)
+    if page:
+        # Fetch all pages for breadcrumb generation
+        flat_pages = get_all_pages_db(conn)
+        breadcrumbs = generate_breadcrumbs(slug, flat_pages)
+        # Sanitize HTML content
+        sanitized_content = bleach.clean(page['content'])
+        return jsonify({'title': page['title'], 'content': sanitized_content, 'breadcrumbs': breadcrumbs}), 200
+    return jsonify({'message': 'Page not found'}), 404
 
 
 @app.route('/api/admin/settings', methods=['GET'])
@@ -438,33 +494,45 @@ def admin_login():
     """
     POST /api/admin/login
     Handles admin login. Checks username and hashed password.
-    Returns a simple access token on success.
+    Returns a JSON response with an access token on success.
     """
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    try:
+        data = request.get_json(silent=True)
+        if not data:
+            app.logger.error("Login attempt with no JSON data")
+            return jsonify({'message': 'No login data provided'}), 400
 
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-    user = cursor.fetchone()
+        username = data.get('username')
+        password = data.get('password')
 
-    if user:
-        print(f"User found: {username}")
-        if check_password_hash(user[2], password):
-            print("Password hash matches")
+        if not username or not password:
+            app.logger.error(f"Login attempt with missing credentials. Username: {username}, Password provided: {bool(password)}")
+            return jsonify({'message': 'Username and password are required'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+
+        if user and check_password_hash(user[2], password):
             session['username'] = username
-            token = secrets.token_hex(32)  # Generate a secure token
-            # Store the token in the database (or a more secure storage)
+            token = secrets.token_hex(32)
             cursor.execute("UPDATE users SET token = ? WHERE username = ?", (token, username))
             conn.commit()
-            session['adminToken'] = token  # Store the token in the session
+            conn.close()
+
+            session['adminToken'] = token
+            app.logger.info(f"User '{username}' logged in successfully.")
             return jsonify({'message': 'Login successful', 'access_token': token}), 200
         else:
-            print("Password hash does not match")
-    else:
-        print(f"User not found: {username}")
-    return jsonify({'message': 'Invalid credentials'}), 401
+            app.logger.warning(f"Failed login attempt for username: '{username}'. Invalid credentials.")
+            conn.close()
+            return jsonify({'message': 'Invalid credentials'}), 401
+
+    except Exception as e:
+        app.logger.exception(f"An unexpected error occurred during login: {e}")
+        # Always return JSON, never HTML
+        return jsonify({'message': 'An internal server error occurred', 'error': str(e)}), 500
 
 @app.route('/api/admin/widgets', methods=['GET'])
 @token_required
@@ -762,9 +830,7 @@ def serve_admin():
 
 @app.route('/admin_panel')
 def admin_panel():
-    if 'adminToken' in session:
-        return send_from_directory('../public', 'admin_panel.html')
-    return 'You are not logged in'
+    return send_from_directory('../public', 'admin_panel.html')
 
 @app.route('/')
 def serve_index():

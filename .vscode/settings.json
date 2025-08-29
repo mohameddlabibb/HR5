@@ -3,5 +3,9 @@
     "python.analysis.extraPaths": [
         "E:/Scripts/Lib/site-packages"
     ],
-    "python.analysis.autoSearchPaths": true
+    "python.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.extraPaths": [
+        "E:/Scripts/Lib/site-packages"
+    ]
 }

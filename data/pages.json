@@ -2,7 +2,7 @@
     {
         "id": "our-company",
         "title": "Our Company",
-        "slug": null,
+        "slug": "our-company",
         "content": null,
         "published": true,
         "design": {
@@ -81,7 +81,7 @@
     {
         "id": "our-destination",
         "title": "Our Destination",
-        "slug": null,
+        "slug": "our-destination",
         "content": null,
         "published": true,
         "design": {
@@ -184,7 +184,7 @@
     {
         "id": "our-benefits",
         "title": "Our Benefits",
-        "slug": null,
+        "slug": "our-benefits",
         "content": null,
         "published": true,
         "design": {
@@ -230,7 +230,7 @@
             {
                 "id": "our-benefits-insurance",
                 "title": "Insurance",
-                "slug": null,
+                "slug": "our-benefits-insurance",
                 "content": null,
                 "published": true,
                 "design": {
@@ -276,7 +276,7 @@
             {
                 "id": "our-benefits-accommodation",
                 "title": "Accommodation",
-                "slug": null,
+                "slug": "our-benefits-accommodation",
                 "content": null,
                 "published": true,
                 "design": {
@@ -322,7 +322,7 @@
             {
                 "id": "our-benefits-commuting",
                 "title": "Commuting",
-                "slug": null,
+                "slug": "our-benefits-commuting",
                 "content": null,
                 "published": true,
                 "design": {
@@ -368,7 +368,7 @@
             {
                 "id": "our-benefits-sports-activities",
                 "title": "Sports & Activities",
-                "slug": null,
+                "slug": "our-benefits-sports-activities",
                 "content": null,
                 "published": true,
                 "design": {
@@ -427,7 +427,7 @@
     {
         "id": "policies",
         "title": "Policies",
-        "slug": null,
+        "slug": "policies",
         "content": null,
         "published": true,
         "design": {
@@ -438,7 +438,7 @@
             {
                 "id": "policies-talent-management",
                 "title": "Talent Management",
-                "slug": null,
+                "slug": "policies-talent-management",
                 "content": null,
                 "published": true,
                 "design": {
@@ -506,7 +506,7 @@
             {
                 "id": "policies-attendance",
                 "title": "Attendance",
-                "slug": null,
+                "slug": "policies-attendance",
                 "content": null,
                 "published": true,
                 "design": {
@@ -574,7 +574,7 @@
             {
                 "id": "policies-leave-management",
                 "title": "Leave Management",
-                "slug": null,
+                "slug": "policies-leave-management",
                 "content": null,
                 "published": true,
                 "design": {
@@ -675,7 +675,7 @@
             {
                 "id": "policies-payroll-management",
                 "title": "Payroll Management",
-                "slug": null,
+                "slug": "policies-payroll-management",
                 "content": null,
                 "published": true,
                 "design": {
@@ -721,7 +721,7 @@
             {
                 "id": "policies-exit-management",
                 "title": "Exit Management",
-                "slug": null,
+                "slug": "policies-exit-management",
                 "content": null,
                 "published": true,
                 "design": {
@@ -789,7 +789,7 @@
             {
                 "id": "policies-travel",
                 "title": "Travel",
-                "slug": null,
+                "slug": "policies-travel",
                 "content": null,
                 "published": true,
                 "design": {
@@ -824,7 +824,7 @@
             {
                 "id": "policies-accommodation",
                 "title": "Accommodation",
-                "slug": null,
+                "slug": "policies-accommodation",
                 "content": null,
                 "published": true,
                 "design": {
@@ -859,7 +859,7 @@
             {
                 "id": "policies-company-vehicles",
                 "title": "Company Vehicles",
-                "slug": null,
+                "slug": "policies-company-vehicles",
                 "content": null,
                 "published": true,
                 "design": {
@@ -916,7 +916,7 @@
             {
                 "id": "policies-workplace",
                 "title": "Workplace",
-                "slug": null,
+                "slug": "policies-workplace",
                 "content": null,
                 "published": true,
                 "design": {
@@ -997,7 +997,7 @@
     {
         "id": "our-team",
         "title": "Our Team",
-        "slug": null,
+        "slug": "our-team",
         "content": null,
         "published": true,
         "design": {
@@ -1021,7 +1021,6 @@
     {
         "id": "contacts",
         "title": "Contacts",
-        "slug": null,
         "content": null,
         "published": true,
         "design": {
