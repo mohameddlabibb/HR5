@@ -2,6 +2,33 @@
 // Client-side JavaScript for the Somabay Handbook Admin Panel dashboard.
 // Handles page management (CRUD), sidebar reordering, image uploads, and design options.
 
+async function uploadFile(inputId) {
+  const fileInput = document.getElementById(inputId);
+  if (!fileInput || fileInput.files.length === 0) {
+    return null; // no file selected
+  }
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  const response = await fetch("/api/admin/upload", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + localStorage.getItem("token") // adjust if you use tokens
+    },
+    body: formData
+  });
+
+  if (!response.ok) {
+    alert("Failed to upload file: " + inputId);
+    return null;
+  }
+
+  const data = await response.json();
+  return data.file_path; // e.g. "/uploads/uuid.png"
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const adminDashboardSection = document.getElementById('admin-dashboard');
     const logoutButton = document.getElementById('logout-button');
@@ -333,66 +360,41 @@ document.addEventListener('DOMContentLoaded', () => {
      * Handles adding a new page or chapter.
      * @param {Event} e - The form submission event.
      */
-    addPageForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+document.getElementById("add-page-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-        const newPage = {
-            title: document.getElementById('add-page-title').value,
-            slug: document.getElementById('add-page-slug').value,
-            content: document.getElementById('add-page-content').value,
-            published: document.getElementById('add-page-published').checked,
-            is_chapter: document.getElementById('add-page-is-chapter').checked,
-            parent_id: document.getElementById('add-page-parent').value || null,
-            design: {
-                headerColor: document.getElementById('add-page-header-color').value,
-                headerImage: document.getElementById('add-page-header-image').value
-            },
-            meta_description: document.getElementById('add-page-meta-description').value,
-            meta_keywords: document.getElementById('add-page-meta-keywords').value,
-            custom_css: document.getElementById('add-page-custom-css').value
-        };
+  const title = document.getElementById("add-page-title").value;
+  const slug = document.getElementById("add-page-slug").value;
+  const content = document.getElementById("add-page-content").value;
 
-        // Basic validation
-        if (!newPage.title || (newPage.is_chapter === false && !newPage.slug)) {
-            alert('Title and Slug (for pages) are required.');
-            return;
-        }
-        if (newPage.is_chapter && newPage.content) {
-            alert('Chapters should not have content directly. Content should be in sub-pages.');
-            return;
-        }
-        if (!newPage.is_chapter && !newPage.content) {
-            alert('Pages must have content.');
-            return;
-        }
-        if (newPage.is_chapter && newPage.slug) {
-            alert('Chapters should not have slugs.');
-            return;
-        }
+  // Upload files if selected
+  const placeholderImage = await uploadFile("add-page-image");
+  const embeddedVideo = await uploadFile("add-page-video");
 
-        try {
-            const response = await fetch('/api/admin/pages', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(newPage)
-            });
+  // Now send everything to /api/admin/pages
+  const response = await fetch("/api/admin/pages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    },
+    body: JSON.stringify({
+      title: title,
+      slug: slug,
+      content: content,
+      placeholder_image: placeholderImage,
+      embedded_video: embeddedVideo
+    })
+  });
 
-            const data = await response.json();
-            console.log('Add page API response:', data); // Log the full response
-
-            if (response.ok) {
-                alert('Page/Chapter added successfully!');
-                $('#addPageModal').modal('hide'); // Hide modal
-                addPageForm.reset(); // Clear form
-                loadAdminData(); // Reload dashboard data
-            } else {
-                alert(data.message || 'Failed to add page/chapter. Check console for details.');
-            }
-        } catch (error) {
-            console.error('Error adding page:', error);
-            alert('An error occurred while adding the page/chapter. Check console for details.');
-        }
-    });
+  if (response.ok) {
+    alert("Page added successfully!");
+    location.reload(); // reload to see new page in list
+  } else {
+    const err = await response.json();
+    alert("Error: " + err.message);
+  }
+});
 
     /**
      * Opens the edit page modal and populates it with existing page data.
@@ -985,7 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error deleting menu:', error);
             alert('An error occurred while deleting the menu.');
         }
-    });
+    };
 
     // Event listener for "Add Menu Item" button
     addMenuItemButton.addEventListener('click', () => openMenuItemModal());
@@ -1307,5 +1309,61 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         // If not authenticated, redirect to login page
         window.location.href = '/admin.html';
-    }
-});
+    }});
+</file_content>
+
+Now that you have the latest state of the file, try the operation again with fewer, more precise SEARCH blocks. For large files especially, it may be prudent to try to limit yourself to <5 SEARCH/REPLACE blocks at a time, then wait for the user to respond with the result of the operation before following up with another replace_in_file call to make additional edits.
+(If you run into this error 3 times in a row, you may use the write_to_file tool as a fallback.)
+</error><environment_details>
+# VSCode Visible Files
+../Microsoft VS Code/public/js/admin_panel.js
+../Microsoft VS Code/public/js/admin_panel.js
+public/js/admin_panel.js
+
+# VSCode Open Tabs
+.vscode/settings.json
+public/admin.html
+public/js/admin.js
+data/pages.json
+import_pages.py
+list_pages.py
+public/pages/404.html
+TODO.md
+publish_all_pages.py
+import_and_publish_pages.py
+import_pages_hierarchy.py
+show_pages.py
+public/pages/index.html
+public/css/admin.css
+public/templates/base.html
+public/js/admin_panel
+backend/init__.py
+backend/auto_init_db.py
+backend/auto_init_db_json.py
+README.md
+backend/generate_static_pages.py
+public/templates/page.html
+public/css/main.css
+backend/wsgi.py
+public/js/app.js
+server.js
+backend/create_admin.py
+backend/app.py
+public/js/admin_panel.js
+backend/config.py
+backend/database.py
+backend/schema.json
+backend/init_db.py
+public/admin_panel.html
+backend/migrate_pages.py
+package.json
+
+# Current Time
+8/30/2025, 1:56:00 PM (Africa/Cairo, UTC+3:00)
+
+# Context Window Usage
+164,500 / 1,048.576K tokens used (16%)
+
+# Current Mode
+ACT MODE
+</environment_details>

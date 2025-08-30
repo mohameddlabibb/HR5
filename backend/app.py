@@ -16,6 +16,21 @@ from functools import wraps
 import sqlite3
 import bleach
 
+# Define allowed HTML tags and attributes for bleach
+ALLOWED_TAGS = [
+    'a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i', 'li', 'ol', 'p', 'strong', 'ul',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'div', 'span', 'img', 'video', 'source',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'iframe'
+]
+ALLOWED_ATTRIBUTES = {
+    '*': ['class', 'id', 'style'], # Allow class, id, style on all elements
+    'a': ['href', 'title', 'target'],
+    'img': ['src', 'alt', 'width', 'height'],
+    'video': ['src', 'controls', 'width', 'height', 'autoplay', 'loop', 'muted', 'poster'],
+    'source': ['src', 'type'],
+    'iframe': ['src', 'width', 'height', 'frameborder', 'allowfullscreen']
+}
+
 # Import admin credentials from config.py
 from backend.config import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
 # Import database helper functions
@@ -23,7 +38,7 @@ from backend.database import create_connection, add_page_db, get_all_pages_db, g
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app = Flask(__name__, static_folder='../public', static_url_path='/public')
+app = Flask(__name__, static_folder='/public', static_url_path='/public')
 
 def generate_breadcrumbs(slug, flat_pages):
     """Generates breadcrumbs for a given page slug."""
@@ -343,8 +358,8 @@ def get_page(slug):
         # Fetch all pages for breadcrumb generation
         flat_pages = get_all_pages_db(conn)
         breadcrumbs = generate_breadcrumbs(slug, flat_pages)
-        # Sanitize HTML content
-        sanitized_content = bleach.clean(page['content'])
+        # Sanitize HTML content using the defined ALLOWED_TAGS and ALLOWED_ATTRIBUTES
+        sanitized_content = bleach.clean(page['content'], tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
         return jsonify({'title': page['title'], 'content': sanitized_content, 'breadcrumbs': breadcrumbs}), 200
     return jsonify({'message': 'Page not found'}), 404
 
@@ -616,44 +631,43 @@ def delete_single_widget(name):
 def add_page():
     """
     POST /api/admin/pages
-    Adds a new page or chapter to the handbook. Requires authentication.
+    Creates a new page with optional image and video.
     """
     data = request.get_json()
+
     title = data.get('title')
     slug = data.get('slug')
-    content = data.get('content', '')
-    published = data.get('published', False)
-    is_chapter = data.get('is_chapter', False)
-    parent_id = data.get('parent_id')
-    design = data.get('design', {})
-    meta_description = data.get('meta_description', '')
-    meta_keywords = data.get('meta_keywords', '')
-    custom_css = data.get('custom_css', '')
+    content = data.get('content')
+    placeholder_image = data.get('placeholder_image')
+    embedded_video = data.get('embedded_video')
 
-
-    # Validate input
-    if not title:
-        return jsonify({'message': 'Title is required'}), 400
-    if not is_chapter and not slug:
-        return jsonify({'message': 'Slug is required for pages'}), 400
-    if not is_chapter and not content:
-        return jsonify({'message': 'Content is required for pages'}), 400
-    if is_chapter and slug:
-        return jsonify({'message': 'Chapters should not have slugs'}), 400
-    if is_chapter and content:
-        return jsonify({'message': 'Chapters should not have content directly'}), 400
+    if not title or not slug:
+        return jsonify({'message': 'Title and slug are required'}), 400
 
     conn = get_db()
-    # Check for duplicate slug only if it's a page
-    if slug and get_page_by_slug_db(conn, slug):
+    # Check for duplicate slug
+    if get_page_by_slug_db(conn, slug):
         return jsonify({'message': 'Slug already exists. Please choose a unique slug.'}), 409
 
     page_id = str(uuid.uuid4()) # Generate unique ID
 
-    add_page_db(conn, page_id, title, slug if not is_chapter else None, content if not is_chapter else None,
-                published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css)
+    add_page_db(conn,
+                page_id=page_id,
+                title=title,
+                slug=slug,
+                content=content,
+                published=True,
+                is_chapter=False,
+                parent_id=None,
+                design={},
+                meta_description='',
+                meta_keywords='',
+                custom_css='',
+                placeholder_image=placeholder_image,
+                embedded_video=embedded_video
+    )
 
-    return jsonify({'message': 'Page/Chapter added successfully', 'page_id': page_id}), 201
+    return jsonify({'message': 'Page created successfully', 'page_id': page_id}), 201
 
 @app.route('/api/admin/pages/<slug>', methods=['PUT'])
 @token_required
@@ -680,13 +694,15 @@ def edit_page(slug):
     meta_description = data.get('meta_description', page_to_edit['meta_description'])
     meta_keywords = data.get('meta_keywords', page_to_edit['meta_keywords'])
     custom_css = data.get('custom_css', page_to_edit['custom_css'])
+    placeholder_image = data.get('placeholder_image', page_to_edit['placeholder_image'])
+    embedded_video = data.get('embedded_video', page_to_edit['embedded_video'])
 
     # Allow slug change, but check for duplicates if changed
     if new_slug != page_to_edit['slug']:
         if get_page_by_slug_db(conn, new_slug):
             return jsonify({'message': 'New slug already exists. Please choose a unique slug.'}), 409
 
-    update_page_db(conn, page_to_edit['id'], title, new_slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css)
+    update_page_db(conn, page_to_edit['id'], title, new_slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
     
     return jsonify({'message': 'Page updated successfully'}), 200
 
@@ -730,7 +746,7 @@ def toggle_page_visibility(page_id):
                    page_to_update['content'], published_status, page_to_update['is_chapter'],
                    page_to_update['parent_id'], page_to_update['design'],
                    page_to_update['meta_description'], page_to_update['meta_keywords'],
-                   page_to_update['custom_css'])
+                   page_to_update['custom_css'], page_to_update['placeholder_image'], page_to_update['embedded_video'])
     
     return jsonify({'message': 'Page visibility updated successfully', 'published': published_status}), 200
 
@@ -759,7 +775,8 @@ def reorder_sidebar():
                 update_page_db(conn, page_id, existing_page['title'], existing_page['slug'],
                                existing_page['content'], existing_page['published'], existing_page['is_chapter'],
                                parent_id, existing_page['design'], existing_page['meta_description'],
-                               existing_page['meta_keywords'], existing_page['custom_css'])
+                               existing_page['meta_keywords'], existing_page['custom_css'],
+                               existing_page['image'], existing_page['video'])
             if 'children' in item and item['children']:
                 update_parent_ids_recursive(item['children'], page_id)
 
@@ -794,7 +811,8 @@ def update_page_design(page_id):
     update_page_db(conn, page_to_update['id'], page_to_update['title'], page_to_update['slug'],
                    page_to_update['content'], page_to_update['published'], page_to_update['is_chapter'],
                    page_to_update['parent_id'], design, page_to_update['meta_description'],
-                   page_to_update['meta_keywords'], page_to_update['custom_css'])
+                   page_to_update['meta_keywords'], page_to_update['custom_css'],
+                   page_to_update['placeholder_image'], page_to_update['embedded_video'])
     
     return jsonify({'message': 'Page design updated successfully', 'design': design}), 200
 
@@ -828,9 +846,46 @@ def serve_admin():
     """
     return send_from_directory('../public', 'admin.html')
 
-@app.route('/admin_panel')
+
+# Upload folder
+UPLOAD_FOLDER = os.path.join("public", "static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Allowed file types
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4", "mov", "avi"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/admin_panel", methods=["GET", "POST"])
 def admin_panel():
-    return send_from_directory('../public', 'admin_panel.html')
+    if request.method == "POST":
+        # Handle uploaded image
+        image_file = request.files.get("placeholder_image")
+        saved_image_url = None
+        if image_file and allowed_file(image_file.filename):
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(UPLOAD_FOLDER, filename)
+            image_file.save(image_path)
+            saved_image_url = f"/static/uploads/{filename}"
+
+        # Handle uploaded video
+        video_file = request.files.get("embedded_video")
+        saved_video_url = None
+        if video_file and allowed_file(video_file.filename):
+            filename = secure_filename(video_file.filename)
+            video_path = os.path.join(UPLOAD_FOLDER, filename)
+            video_file.save(video_path)
+            saved_video_url = f"/static/uploads/{filename}"
+
+        # TODO: Save saved_image_url and saved_video_url to DB instead of just printing
+        print("Image uploaded at:", saved_image_url)
+        print("Video uploaded at:", saved_video_url)
+
+        return redirect(url_for("admin_panel"))
+
+    # For GET request → render your HTML
+    return send_from_directory("/public", "admin_panel.html")
 
 @app.route('/')
 def serve_index():

@@ -40,14 +40,14 @@ def get_user(conn, username):
     return cur.fetchone()
 
 # --- Page Functions ---
-def add_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css):
+def add_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video):
     """Insert a new page or chapter into the database."""
-    sql = '''INSERT INTO pages(id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css)
-             VALUES(?,?,?,?,?,?,?,?,?,?,?)'''
+    sql = '''INSERT INTO pages(id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
+             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute(sql, (
         page_id, title, slug, content, published, is_chapter,
-        parent_id, json.dumps(design), meta_description, meta_keywords, custom_css
+        parent_id, json.dumps(design), meta_description, meta_keywords, custom_css, placeholder_image, embedded_video
     ))
     conn.commit()
     return cur.lastrowid
@@ -95,17 +95,18 @@ def get_page_by_slug_db(conn, slug):
         return page
     return None
 
-def update_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css):
+def update_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video):
     """Update an existing page or chapter in the database."""
     sql = '''UPDATE pages
              SET title = ?, slug = ?, content = ?, published = ?, is_chapter = ?,
-                 parent_id = ?, design = ?, meta_description = ?, meta_keywords = ?, custom_css = ?
+                 parent_id = ?, design = ?, meta_description = ?, meta_keywords = ?, custom_css = ?,
+                 placeholder_image = ?, embedded_video = ?
              WHERE id = ?'''
     cur = conn.cursor()
     cur.execute(sql, (
         title, slug, content, published, is_chapter,
         parent_id, json.dumps(design), meta_description, meta_keywords, custom_css,
-        page_id
+        placeholder_image, embedded_video, page_id
     ))
     conn.commit()
     return cur.rowcount
@@ -165,6 +166,9 @@ if __name__ == '__main__':
         meta_description TEXT,
         meta_keywords TEXT,
         custom_css TEXT,
+        placeholder_image TEXT,
+        embedded_video TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE CASCADE
     );
     """

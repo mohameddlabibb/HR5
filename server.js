@@ -7,13 +7,13 @@ const app = express();
 const PORT = 3000;
 
 // ✅ Proxy all /api requests to Flask backend on port 5000
-app.use(
-  '/api',
-  createProxyMiddleware({
-    target: 'http://127.0.0.1:5000',
-    changeOrigin: true,
-  })
-);
+// app.use(
+//   '/api',
+//   createProxyMiddleware({
+//     target: 'http://127.0.0.1:5000',
+//     changeOrigin: true,
+//   })
+// );
 
 // ✅ Serve static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,7 +24,8 @@ app.get('/admin', (req, res) => {
 });
 
 app.get('/admin_panel', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin_panel'));
+    res.setHeader('Content-Type', 'text/html');
+    res.sendFile(path.join(__dirname, 'public', 'admin_panel.html'));
   });
 
 // ✅ Handle React/HTML fallback (if frontend routing is used)

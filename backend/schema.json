@@ -36,7 +36,9 @@
       "meta_description": "TEXT",
       "meta_keywords": "TEXT",
       "custom_css": "TEXT",
-      "summary": "TEXT"
+      "placeholder_image": "TEXT",
+      "embedded_video": "TEXT",
+      "created_at": "DATETIME DEFAULT CURRENT_TIMESTAMP"
     }
   },
   "settings": {

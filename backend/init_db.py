@@ -54,6 +54,9 @@ def initialize_database():
           meta_description TEXT,
           meta_keywords TEXT,
           custom_css TEXT,
+          placeholder_image TEXT,
+          embedded_video TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (parent_id) REFERENCES pages (id) ON DELETE CASCADE
         );
         """,
@@ -72,8 +75,13 @@ def initialize_database():
         print(f"Table '{name}' ensured.")
 
     # --- Example: Add new columns safely ---
-    add_column_if_not_exists(conn, "users", "last_login", "TEXT")  # new optional column
-    add_column_if_not_exists(conn, "pages", "summary", "TEXT")      # another optional column
+    add_column_if_not_exists(conn, "users", "last_login", "TEXT")
+    add_column_if_not_exists(conn, "pages", "summary", "TEXT")
+    add_column_if_not_exists(conn, "pages", "placeholder_image", "file")
+    add_column_if_not_exists(conn, "pages", "embedded_video", "file")
+    # The 'created_at' column is handled by the CREATE TABLE statement with a default value.
+    # Adding it again with a non-constant default via ALTER TABLE is not supported by SQLite.
+    # If the table already exists, this column should have been added by the updated CREATE TABLE.
 
     # --- Create admin user safely ---
     hashed_password = generate_password_hash("password")
