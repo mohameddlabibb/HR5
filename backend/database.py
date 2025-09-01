@@ -1,13 +1,17 @@
 import sqlite3
 from sqlite3 import Error
+import os
 from werkzeug.security import generate_password_hash  # For password hashing
 import json  # For serializing page data
 
-def create_connection(db_path="site.db"):
+def create_connection(db_path=None):
     """
-    Create a database connection to the SQLite database specified by db_path.
-    Returns the connection object or None.
+    Create a database connection. Defaults to the project root site.db to match Flask.
+    Always uses an absolute path to avoid CWD issues.
     """
+    if db_path is None:
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        db_path = os.path.join(base_dir, 'site.db')
     conn = None
     try:
         conn = sqlite3.connect(db_path)
@@ -81,11 +85,16 @@ def get_page_by_id_db(conn, page_id):
         return page
     return None
 
-def get_page_by_slug_db(conn, slug):
-    """Retrieve a single page by its slug."""
-    sql = '''SELECT * FROM pages WHERE slug = ?'''
+def get_page_by_slug_db(conn, slug, parent_id=None):
+    """Retrieve a single page by its slug, optionally scoped by parent_id."""
+    if parent_id is None:
+        sql = '''SELECT * FROM pages WHERE slug = ? ORDER BY created_at DESC LIMIT 1'''
+        params = (slug,)
+    else:
+        sql = '''SELECT * FROM pages WHERE slug = ? AND parent_id IS ? ORDER BY created_at DESC LIMIT 1'''
+        params = (slug, parent_id)
     cur = conn.cursor()
-    cur.execute(sql, (slug,))
+    cur.execute(sql, params)
     row = cur.fetchone()
     if row:
         page = dict(row)
@@ -157,7 +166,7 @@ if __name__ == '__main__':
     CREATE TABLE IF NOT EXISTS pages (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        slug TEXT UNIQUE,
+        slug TEXT,
         content TEXT,
         published BOOLEAN NOT NULL,
         is_chapter BOOLEAN NOT NULL,

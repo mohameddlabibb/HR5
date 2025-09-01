@@ -14,7 +14,7 @@ ADMIN_USERNAME = "admin"
 #        from werkzeug.security import generate_password_hash
 #        print(generate_password_hash("your_new_password"))
 #   3. Copy the output and replace the string below
-ADMIN_PASSWORD_HASH = "adminpass"
+ADMIN_PASSWORD_HASH = "pbkdf2:sha256:600000$Gs8yZlskc2CfnBPY$892013fd6d3b72de2f9344f8593d6922c691f2591babfc747d96c260f3be11a7"
 
 # --- Server / App Settings (Optional) ---
 # You can add other configuration settings here if needed

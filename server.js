@@ -1,32 +1,30 @@
 // server.js
 const express = require('express');
 const path = require('path');
+const mime = require('mime-types'); // Import mime-types
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
 const PORT = 3000;
 
-// ✅ Proxy all /api requests to Flask backend on port 5000
-// app.use(
-//   '/api',
-//   createProxyMiddleware({
-//     target: 'http://127.0.0.1:5000',
-//     changeOrigin: true,
-//   })
-// );
-
-// ✅ Serve static frontend files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Serve admin.html
-app.get('/admin', (req, res) => {
+// Serve admin pages directly from Node static files
+app.get('/admin_panel', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin_panel.html'));
+});
+app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-app.get('/admin_panel', (req, res) => {
-    res.setHeader('Content-Type', 'text/html');
-    res.sendFile(path.join(__dirname, 'public', 'admin_panel.html'));
-  });
+// ✅ Serve static frontend files under /public to match Flask paths
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (mime.lookup(filePath) === 'application/javascript') {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
+
 
 // ✅ Handle React/HTML fallback (if frontend routing is used)
 app.get('*', (req, res) => {

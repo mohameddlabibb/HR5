@@ -23,7 +23,7 @@ def import_pages_from_json(json_file="data/pages.json"):
         design = page['design']
         is_chapter = bool(page.get('children'))
         
-        add_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, None, None, None)
+        add_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, None, None, None, None, None)
 
         if 'children' in page and page['children']:
             for child in page['children']:

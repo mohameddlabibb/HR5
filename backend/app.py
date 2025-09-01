@@ -9,12 +9,15 @@ import json
 import uuid
 import secrets
 from datetime import datetime
-from flask import Flask, request, jsonify, send_from_directory, session, g
+from flask import Flask, request, jsonify, send_from_directory, session, g, redirect, url_for
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps
 import sqlite3
 import bleach
+import logging
+from logging.handlers import RotatingFileHandler
 
 # Define allowed HTML tags and attributes for bleach
 ALLOWED_TAGS = [
@@ -31,6 +34,11 @@ ALLOWED_ATTRIBUTES = {
     'iframe': ['src', 'width', 'height', 'frameborder', 'allowfullscreen']
 }
 
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # Import admin credentials from config.py
 from backend.config import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
 # Import database helper functions
@@ -38,50 +46,41 @@ from backend.database import create_connection, add_page_db, get_all_pages_db, g
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app = Flask(__name__, static_folder='/public', static_url_path='/public')
+basedir = os.path.abspath(os.path.dirname(__file__))
 
-def generate_breadcrumbs(slug, flat_pages):
-    """Generates breadcrumbs for a given page slug."""
-    breadcrumbs = []
-    print(f"generate_breadcrumbs called with slug: {slug} and flat_pages: {flat_pages}")
-    current_page = next((p for p in flat_pages if p['slug'] == slug), None)
+app = Flask(
+    __name__,
+    static_folder=os.path.abspath(os.path.join(basedir, "../public")),
+    static_url_path="/public",
+    template_folder=os.path.abspath(os.path.join(basedir, "../public"))
+)
+app.debug = True
+print("Template folder:", app.template_folder)
 
-    if not current_page:
-        print(f"Current page not found for slug: {slug}")
-        return breadcrumbs
+# Configure logging
+log_file = os.path.join(basedir, 'app.log')
+log_handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=1)
+log_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log_handler.setFormatter(formatter)
+app.logger.addHandler(log_handler)
+app.logger.setLevel(logging.INFO)
 
-    print(f"Current page: {current_page}")
-    breadcrumbs.append({'title': 'Home', 'url': '/index.html', 'active': False})
 
-    parent_id = current_page['parent_id']
-    while parent_id:
-        parent_page = next((p for p in flat_pages if p['id'] == parent_id), None)
-        if not parent_page:
-            break
-        breadcrumbs.insert(1, {'title': parent_page['title'], 'url': f"/pages/{parent_page['slug']}", 'active': False})
-        parent_id = parent_page['parent_id']
+# configure upload folder
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-    breadcrumbs.append({'title': current_page['title'], 'url': None, 'active': True})
-    return breadcrumbs
-
-    breadcrumbs.append({'title': 'Home', 'url': '/index.html', 'active': False})
-
-    parent_id = current_page['parent_id']
-    while parent_id:
-        parent_page = next((p for p in flat_pages if p['id'] == parent_id), None)
-        if not parent_page:
-            break
-        breadcrumbs.insert(1, {'title': parent_page['title'], 'url': f"/pages/{parent_page['slug']}", 'active': False})
-        parent_id = parent_page['parent_id']
-
-    breadcrumbs.append({'title': current_page['title'], 'url': None, 'active': True})
-    return breadcrumbs
+# allowed extensions
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4", "avi"}
 # Enable CORS for all origins. In a production environment, you should restrict this
 # to specific origins (e.g., your frontend URL).
 CORS(app)
 app.config['SECRET_KEY'] = 'somabay_handbook' # Used for session management
 
-DATABASE = 'site.db'
+# Use consistent root-level database (e:\\HR5\\site.db)
+DATABASE = os.path.join(basedir, '..', 'site.db')
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -89,6 +88,73 @@ def get_db():
         db = g._database = sqlite3.connect(DATABASE)
         db.row_factory = sqlite3.Row # This makes rows behave like dictionaries
     return db
+
+# Ensure pages table allows duplicate slugs (no UNIQUE constraint)
+def ensure_pages_table_schema():
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cur = conn.cursor()
+        cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='pages'")
+        row = cur.fetchone()
+        if not row:
+            conn.close()
+            return
+        create_sql = row[0] or ""
+        if "slug TEXT UNIQUE" in create_sql:
+            # Migrate: drop UNIQUE by recreating table
+            cur.execute("PRAGMA foreign_keys=off;")
+            conn.commit()
+            cur.execute("ALTER TABLE pages RENAME TO pages_old;")
+            conn.commit()
+            cur.executescript(
+                """
+                CREATE TABLE pages (
+                    id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    slug TEXT,
+                    content TEXT,
+                    published BOOLEAN NOT NULL,
+                    is_chapter BOOLEAN NOT NULL,
+                    parent_id TEXT,
+                    design TEXT,
+                    meta_description TEXT,
+                    meta_keywords TEXT,
+                    custom_css TEXT,
+                    placeholder_image TEXT,
+                    embedded_video TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE CASCADE
+                );
+                """
+            )
+            conn.commit()
+            # Copy data
+            cur.execute(
+                """
+                INSERT INTO pages (id, title, slug, content, published, is_chapter, parent_id, design,
+                                   meta_description, meta_keywords, custom_css, placeholder_image, embedded_video, created_at)
+                SELECT id, title, slug, content, published, is_chapter, parent_id, design,
+                       meta_description, meta_keywords, custom_css, 
+                       COALESCE(placeholder_image, NULL), COALESCE(embedded_video, NULL), 
+                       COALESCE(created_at, CURRENT_TIMESTAMP)
+                FROM pages_old;
+                """
+            )
+            conn.commit()
+            cur.execute("DROP TABLE pages_old;")
+            conn.commit()
+            cur.execute("PRAGMA foreign_keys=on;")
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        # Log but don't crash app
+        try:
+            app.logger.warning(f"Schema check/migration failed: {e}")
+        except Exception:
+            pass
+
+# Run schema check at import time
+ensure_pages_table_schema()
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -271,7 +337,7 @@ def update_widget(name, widget_type, widget_data):
     cursor = db.cursor()
     cursor.execute("UPDATE widgets SET widget_type = ?, widget_data = ? WHERE name = ?", (widget_type, json.dumps(widget_data), name))
     db.commit()
-    return cur.rowcount
+    return cursor.rowcount
 
 def delete_widget(name):
     """Deletes a widget by its name."""
@@ -279,7 +345,7 @@ def delete_widget(name):
     cursor = db.cursor()
     cursor.execute("DELETE FROM widgets WHERE name = ?", (name,))
     db.commit()
-    return cur.rowcount
+    return cursor.rowcount
 
 # --- Authentication Decorator ---
 
@@ -636,20 +702,56 @@ def add_page():
     data = request.get_json()
 
     title = data.get('title')
-    slug = data.get('slug')
+    provided_slug = data.get('slug')  # may be client-generated
     content = data.get('content')
     placeholder_image = data.get('placeholder_image')
     embedded_video = data.get('embedded_video')
+    parent_id = data.get('parent_id')
+    is_chapter = bool(data.get('is_chapter', False))
 
-    if not title or not slug:
-        return jsonify({'message': 'Title and slug are required'}), 400
+    if not title:
+        return jsonify({'message': 'Title is required'}), 400
 
+    # Server-side slugify and hierarchical slug generation
+    def slugify(text: str) -> str:
+        import re
+        text = (text or "").strip().lower()
+        text = re.sub(r"['\"]", "", text)
+        text = re.sub(r"[^a-z0-9]+", "-", text)
+        text = re.sub(r"(^-|-$)+", "", text)
+        return text
+
+    # Build slug from parent if provided
     conn = get_db()
-    # Check for duplicate slug
-    if get_page_by_slug_db(conn, slug):
-        return jsonify({'message': 'Slug already exists. Please choose a unique slug.'}), 409
+    parent_slug_part = ""
+    if parent_id:
+        parent_page = get_page_by_id_db(conn, parent_id)
+        if parent_page and parent_page.get('slug'):
+            parent_slug_part = parent_page['slug'] + "-"
 
-    page_id = str(uuid.uuid4()) # Generate unique ID
+    generated_slug = parent_slug_part + slugify(title)
+    # If client passed a slug, ignore it and use generated_slug to enforce consistency
+    slug = generated_slug
+
+    # NOTE: We allow duplicate slugs globally, but not under the same parent.
+    # Check for duplicate within same parent scope only.
+    existing_same = None
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM pages WHERE slug = ? AND (parent_id IS ? OR parent_id = ?) LIMIT 1", (slug, parent_id, parent_id))
+    existing_same = cur.fetchone()
+    if existing_same:
+        # If collision, append a short suffix
+        suffix = 2
+        base_slug = slug
+        while True:
+            trial = f"{base_slug}-{suffix}"
+            cur.execute("SELECT 1 FROM pages WHERE slug = ? AND (parent_id IS ? OR parent_id = ?) LIMIT 1", (trial, parent_id, parent_id))
+            if not cur.fetchone():
+                slug = trial
+                break
+            suffix += 1
+
+    page_id = str(uuid.uuid4())  # Generate unique ID
 
     add_page_db(conn,
                 page_id=page_id,
@@ -657,8 +759,8 @@ def add_page():
                 slug=slug,
                 content=content,
                 published=True,
-                is_chapter=False,
-                parent_id=None,
+                is_chapter=is_chapter,
+                parent_id=parent_id,
                 design={},
                 meta_description='',
                 meta_keywords='',
@@ -667,7 +769,7 @@ def add_page():
                 embedded_video=embedded_video
     )
 
-    return jsonify({'message': 'Page created successfully', 'page_id': page_id}), 201
+    return jsonify({'message': 'Page created successfully', 'page_id': page_id, 'slug': slug}), 201
 
 @app.route('/api/admin/pages/<slug>', methods=['PUT'])
 @token_required
@@ -685,7 +787,7 @@ def edit_page(slug):
 
     # Update fields
     title = data.get('title', page_to_edit['title'])
-    new_slug = data.get('slug', page_to_edit['slug'])
+    requested_slug = data.get('slug', page_to_edit['slug'])
     content = data.get('content', page_to_edit['content'])
     published = data.get('published', page_to_edit['published'])
     is_chapter = data.get('is_chapter', page_to_edit['is_chapter'])
@@ -697,14 +799,40 @@ def edit_page(slug):
     placeholder_image = data.get('placeholder_image', page_to_edit['placeholder_image'])
     embedded_video = data.get('embedded_video', page_to_edit['embedded_video'])
 
-    # Allow slug change, but check for duplicates if changed
-    if new_slug != page_to_edit['slug']:
-        if get_page_by_slug_db(conn, new_slug):
-            return jsonify({'message': 'New slug already exists. Please choose a unique slug.'}), 409
+    # Recompute hierarchical slug if not provided
+    def slugify(text: str) -> str:
+        import re
+        text = (text or "").strip().lower()
+        text = re.sub(r"['\"]", "", text)
+        text = re.sub(r"[^a-z0-9]+", "-", text)
+        text = re.sub(r"(^-|-$)+", "", text)
+        return text
+
+    parent_slug_part = ""
+    if parent_id:
+        parent_page = get_page_by_id_db(conn, parent_id)
+        if parent_page and parent_page.get('slug'):
+            parent_slug_part = parent_page['slug'] + "-"
+
+    new_slug = requested_slug or (parent_slug_part + slugify(title))
+
+    # If slug changed or parent changed, ensure slug is unique within same parent by auto-suffixing
+    if new_slug != page_to_edit['slug'] or parent_id != page_to_edit['parent_id']:
+        cur = conn.cursor()
+        base_slug = new_slug
+        suffix = 2
+        cur.execute("SELECT id FROM pages WHERE slug = ? AND (parent_id IS ? OR parent_id = ?) AND id != ? LIMIT 1", (new_slug, parent_id, parent_id, page_to_edit['id']))
+        while cur.fetchone():
+            trial = f"{base_slug}-{suffix}"
+            cur.execute("SELECT id FROM pages WHERE slug = ? AND (parent_id IS ? OR parent_id = ?) AND id != ? LIMIT 1", (trial, parent_id, parent_id, page_to_edit['id']))
+            if not cur.fetchone():
+                new_slug = trial
+                break
+            suffix += 1
 
     update_page_db(conn, page_to_edit['id'], title, new_slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
     
-    return jsonify({'message': 'Page updated successfully'}), 200
+    return jsonify({'message': 'Page updated successfully', 'slug': new_slug}), 200
 
 @app.route('/api/admin/pages/<slug>', methods=['DELETE'])
 @token_required
@@ -776,7 +904,7 @@ def reorder_sidebar():
                                existing_page['content'], existing_page['published'], existing_page['is_chapter'],
                                parent_id, existing_page['design'], existing_page['meta_description'],
                                existing_page['meta_keywords'], existing_page['custom_css'],
-                               existing_page['image'], existing_page['video'])
+                               existing_page.get('placeholder_image'), existing_page.get('embedded_video'))
             if 'children' in item and item['children']:
                 update_parent_ids_recursive(item['children'], page_id)
 
@@ -816,6 +944,59 @@ def update_page_design(page_id):
     
     return jsonify({'message': 'Page design updated successfully', 'design': design}), 200
 
+@app.route('/api/admin/pages', methods=['POST'])
+@token_required
+def create_page():
+    """
+    POST /api/admin/pages
+    Creates a new page or chapter. Requires authentication.
+    Minimal required fields: title, slug, content. Others optional.
+    """
+    data = request.get_json() or {}
+
+    title = data.get('title')
+    slug = data.get('slug')
+    content = data.get('content', '')
+    published = bool(data.get('published', True))
+    is_chapter = bool(data.get('is_chapter', False))
+    parent_id = data.get('parent_id')
+    design = data.get('design', {'headerColor': '#f8f9fa', 'headerImage': '/uploads/default-header.jpg'})
+    meta_description = data.get('meta_description')
+    meta_keywords = data.get('meta_keywords')
+    custom_css = data.get('custom_css')
+    placeholder_image = data.get('placeholder_image')
+    embedded_video = data.get('embedded_video')
+
+    if not title or not slug:
+        return jsonify({'message': 'Title and slug are required'}), 400
+
+    conn = get_db()
+    # Allow same slug under different parents: enforce uniqueness only when no parent
+    existing = get_page_by_slug_db(conn, slug)
+    if existing and (not parent_id or existing.get('parent_id') == parent_id):
+        return jsonify({'message': 'Slug already exists for this location'}), 409
+
+    page_id = str(uuid.uuid4()) if not is_chapter else slug
+
+    add_page_db(
+        conn,
+        page_id,
+        title,
+        slug,
+        content,
+        1 if published else 0,
+        1 if is_chapter else 0,
+        parent_id,
+        design,
+        meta_description,
+        meta_keywords,
+        custom_css,
+        placeholder_image,
+        embedded_video,
+    )
+
+    return jsonify({'message': 'Page created successfully', 'id': page_id, 'slug': slug}), 201
+
 @app.route('/api/admin/upload', methods=['POST'])
 @token_required
 def upload_image():
@@ -844,11 +1025,11 @@ def serve_admin():
     """
     Serves the admin.html file from the public directory.
     """
-    return send_from_directory('../public', 'admin.html')
+    return send_from_directory(app.static_folder, "admin.html")
 
 
 # Upload folder
-UPLOAD_FOLDER = os.path.join("public", "static", "uploads")
+UPLOAD_FOLDER = os.path.join(basedir, '..', 'public', 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Allowed file types
@@ -857,49 +1038,37 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4", "mov", "avi"}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route("/admin_panel", methods=["GET", "POST"])
+@app.route("/admin_panel", methods=["GET"])
 def admin_panel():
-    if request.method == "POST":
-        # Handle uploaded image
-        image_file = request.files.get("placeholder_image")
-        saved_image_url = None
-        if image_file and allowed_file(image_file.filename):
-            filename = secure_filename(image_file.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            image_file.save(image_path)
-            saved_image_url = f"/static/uploads/{filename}"
+    """Serve the Admin Panel static HTML."""
+    app.logger.info("Serving admin_panel.html")
+    try:
+        # Use Flask's static file helper (respects app.static_folder)
+        return app.send_static_file("admin_panel.html")
+    except Exception as e:
+        app.logger.exception(f"Error serving admin_panel.html: {e}")
+        return jsonify({'message': 'Failed to serve admin panel', 'error': str(e)}), 500
 
-        # Handle uploaded video
-        video_file = request.files.get("embedded_video")
-        saved_video_url = None
-        if video_file and allowed_file(video_file.filename):
-            filename = secure_filename(video_file.filename)
-            video_path = os.path.join(UPLOAD_FOLDER, filename)
-            video_file.save(video_path)
-            saved_video_url = f"/static/uploads/{filename}"
 
-        # TODO: Save saved_image_url and saved_video_url to DB instead of just printing
-        print("Image uploaded at:", saved_image_url)
-        print("Video uploaded at:", saved_video_url)
-
-        return redirect(url_for("admin_panel"))
-
-    # For GET request → render your HTML
-    return send_from_directory("/public", "admin_panel.html")
+@app.route('/public/<path:filename>')
+def serve_public(filename):
+    """Explicitly serve files under the public directory (mirrors Flask static)."""
+    return send_from_directory(app.static_folder, filename)
 
 @app.route('/')
 def serve_index():
     """
-    Serves the main index.html file from the public/pages directory.
+    Serves the main index.html file from the public directory.
     """
-    return send_from_directory(os.path.join(app.static_folder, 'pages'), 'index.html')
+    return send_from_directory(app.static_folder, 'index.html')
+
 
 @app.route('/pages/<path:filename>')
 def serve_static_page(filename):
     """
     Serves static HTML pages from the public/pages directory.
     """
-    return send_from_directory(os.path.join(app.static_folder, 'pages'), filename)
+    return send_from_directory(os.path.join("../public", 'pages'), filename)
 
 # Example 301 Redirect (uncomment and modify as needed)
 # @app.route('/old-placeholder-url')
@@ -911,9 +1080,40 @@ def page_not_found(e):
     """
     Custom 404 error handler.
     """
-    return send_from_directory(os.path.join(app.static_folder, 'pages'), '404.html'), 404
+    return send_from_directory(os.path.join("../public", 'pages'), '404.html'), 404
+
+@app.route('/logs')
+@token_required
+def view_logs():
+    """
+    Displays the contents of the log file. Requires authentication.
+    """
+    try:
+        with open(log_file, 'r') as f:
+            content = f.read()
+        return jsonify({'logs': content}), 200
+    except Exception as e:
+        app.logger.exception(f"Error reading log file: {e}")
+        return jsonify({'message': 'Could not read log file', 'error': str(e)}), 500
 
 # --- Run the Flask app ---
+import socket
+
+# Ensure /uploads paths are served from public/uploads (compatible with Node at /public/uploads)
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'uploads'), filename)
+
 if __name__ == '__main__':
     # This is for development only. In production, use a WSGI server like Gunicorn.
-    app.run(debug=True, port=5000)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        s.bind(('127.0.0.1', 5000))
+    except OSError as e:
+        print(f"Socket binding error: {e}")
+        s.close()
+        raise
+    s.close()
+
+    app.run(debug=True, port=5000, use_reloader=False)

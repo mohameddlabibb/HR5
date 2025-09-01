@@ -14,7 +14,7 @@ async function uploadFile(inputId) {
   const response = await fetch("/api/admin/upload", {
     method: "POST",
     headers: {
-      "Authorization": "Bearer " + localStorage.getItem("token") // adjust if you use tokens
+      "Authorization": "Bearer " + localStorage.getItem("adminToken")
     },
     body: formData
   });
@@ -29,7 +29,7 @@ async function uploadFile(inputId) {
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     const adminDashboardSection = document.getElementById('admin-dashboard');
     const logoutButton = document.getElementById('logout-button');
 
@@ -342,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (item.children) { // Only chapters can be parents
                         const option = document.createElement('option');
                         option.value = item.id;
+                        option.dataset.slug = item.slug || '';
                         option.textContent = `${indent}${item.title} (Chapter)`;
                         addPageParentSelect.appendChild(option);
                         addChaptersToSelect(item.children, indent + '-- ');
@@ -364,24 +365,43 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
   e.preventDefault();
 
   const title = document.getElementById("add-page-title").value;
-  const slug = document.getElementById("add-page-slug").value;
+  const parentId = document.getElementById("add-page-parent").value || null;
+  const isChapter = document.getElementById("add-page-is-chapter").checked;
   const content = document.getElementById("add-page-content").value;
+
+  // Build hierarchical slug using parent's slug when parent chosen
+  function slugify(text) {
+    return (text || "")
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  }
+  let slug;
+  if (parentId) {
+    const parentOption = document.querySelector(`#add-page-parent option[value="${parentId}"]`);
+    const parentSlug = parentOption ? (parentOption.dataset.slug || "") : "";
+    slug = (parentSlug ? `${parentSlug}-` : "") + slugify(title);
+  } else {
+    slug = slugify(title);
+  }
 
   // Upload files if selected
   const placeholderImage = await uploadFile("add-page-image");
   const embeddedVideo = await uploadFile("add-page-video");
 
-  // Now send everything to /api/admin/pages
+  // Send to backend
   const response = await fetch("/api/admin/pages", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + localStorage.getItem("token")
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       title: title,
       slug: slug,
       content: content,
+      parent_id: parentId,
+      is_chapter: isChapter,
       placeholder_image: placeholderImage,
       embedded_video: embeddedVideo
     })
@@ -389,10 +409,10 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
 
   if (response.ok) {
     alert("Page added successfully!");
-    location.reload(); // reload to see new page in list
+    location.reload();
   } else {
     const err = await response.json();
-    alert("Error: " + err.message);
+    alert("Error: " + (err.message || response.statusText));
   }
 });
 
@@ -1310,60 +1330,3 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
         // If not authenticated, redirect to login page
         window.location.href = '/admin.html';
     }});
-</file_content>
-
-Now that you have the latest state of the file, try the operation again with fewer, more precise SEARCH blocks. For large files especially, it may be prudent to try to limit yourself to <5 SEARCH/REPLACE blocks at a time, then wait for the user to respond with the result of the operation before following up with another replace_in_file call to make additional edits.
-(If you run into this error 3 times in a row, you may use the write_to_file tool as a fallback.)
-</error><environment_details>
-# VSCode Visible Files
-../Microsoft VS Code/public/js/admin_panel.js
-../Microsoft VS Code/public/js/admin_panel.js
-public/js/admin_panel.js
-
-# VSCode Open Tabs
-.vscode/settings.json
-public/admin.html
-public/js/admin.js
-data/pages.json
-import_pages.py
-list_pages.py
-public/pages/404.html
-TODO.md
-publish_all_pages.py
-import_and_publish_pages.py
-import_pages_hierarchy.py
-show_pages.py
-public/pages/index.html
-public/css/admin.css
-public/templates/base.html
-public/js/admin_panel
-backend/init__.py
-backend/auto_init_db.py
-backend/auto_init_db_json.py
-README.md
-backend/generate_static_pages.py
-public/templates/page.html
-public/css/main.css
-backend/wsgi.py
-public/js/app.js
-server.js
-backend/create_admin.py
-backend/app.py
-public/js/admin_panel.js
-backend/config.py
-backend/database.py
-backend/schema.json
-backend/init_db.py
-public/admin_panel.html
-backend/migrate_pages.py
-package.json
-
-# Current Time
-8/30/2025, 1:56:00 PM (Africa/Cairo, UTC+3:00)
-
-# Context Window Usage
-164,500 / 1,048.576K tokens used (16%)
-
-# Current Mode
-ACT MODE
-</environment_details>

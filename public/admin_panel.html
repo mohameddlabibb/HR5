@@ -17,6 +17,12 @@
         <p>Welcome, Admin!</p>
     </div>
 
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/js/admin_panel.js"></script>
+
     <!-- Admin Dashboard Section -->
     <section id="admin-dashboard" class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -129,10 +135,8 @@
                             <label for="add-page-title" class="form-label">Title</label>
                             <input type="text" class="form-control" id="add-page-title" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="add-page-slug" class="form-label">Slug (URL path, e.g., 'our-company-shareholders')</label>
-                            <input type="text" class="form-control" id="add-page-slug" required>
-                        </div>
+                        <!-- Slug is auto-generated; keep hidden to avoid user input -->
+                        <input type="hidden" id="add-page-slug">
                         <div class="mb-3">
                             <label for="add-page-parent" class="form-label">Parent Chapter (optional)</label>
                             <select class="form-select" id="add-page-parent">
@@ -254,8 +258,29 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Gather basic text fields
         const title = document.getElementById("add-page-title").value;
-        const slug = document.getElementById("add-page-slug").value;
+        const parentId = document.getElementById("add-page-parent").value || null;
+        const isChapter = document.getElementById("add-page-is-chapter").checked;
         const content = document.getElementById("add-page-content").value;
+
+        // Auto-generate hierarchical slug using parent's slug when chosen
+        function slugify(text) {
+            return (text || "")
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/['"]/g, "")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, "");
+        }
+
+        let slug;
+        if (parentId) {
+            const parentOption = document.querySelector(`#add-page-parent option[value="${parentId}"]`);
+            const parentSlug = parentOption ? (parentOption.dataset.slug || "") : "";
+            slug = (parentSlug ? `${parentSlug}-` : "") + slugify(title);
+        } else {
+            slug = slugify(title);
+        }
 
         let placeholderImage = null;
         let embeddedVideo = null;
@@ -266,15 +291,21 @@ document.addEventListener("DOMContentLoaded", function() {
             const res = await fetch("/api/admin/upload", {
                 method: "POST",
                 headers: {
-                    "Authorization": "Bearer " + localStorage.getItem("token")
+                    "Authorization": "Bearer " + localStorage.getItem("adminToken")
                 },
                 body: formData
             });
+            if (res.status === 401) {
+                alert("Session expired. Please log in again.");
+                localStorage.removeItem("adminToken");
+                window.location.href = "/admin.html";
+                return null;
+            }
             const data = await res.json();
             if (res.ok) {
                 return data.file_path;
             } else {
-                alert("Upload failed: " + data.message);
+                alert("Upload failed: " + (data.message || res.statusText));
                 return null;
             }
         }
@@ -293,6 +324,8 @@ document.addEventListener("DOMContentLoaded", function() {
             title,
             slug,
             content,
+            parent_id: parentId,
+            is_chapter: isChapter,
             placeholder_image: placeholderImage,
             embedded_video: embeddedVideo
         };
@@ -301,17 +334,24 @@ document.addEventListener("DOMContentLoaded", function() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("token")
+                "Authorization": "Bearer " + localStorage.getItem("adminToken")
             },
             body: JSON.stringify(pagePayload)
         });
+
+        if (res.status === 401) {
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem("adminToken");
+            window.location.href = "/admin.html";
+            return;
+        }
 
         const result = await res.json();
         if (res.ok) {
             alert("Page saved successfully!");
             window.location.reload();
         } else {
-            alert("Error saving page: " + result.message);
+            alert("Error saving page: " + (result.message || res.statusText));
         }
     });
 });
@@ -534,6 +574,6 @@ document.addEventListener("DOMContentLoaded", function() {
     <!-- Optional: Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JavaScript -->
-    <script src="/public/js/admin_panel.js?v=1"></script>
+    <script src="js/admin_panel.js?v=1"></script>
 </body>
 </html>

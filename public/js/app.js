@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to fetch pages data from Flask backend
     async function fetchPagesData() {
         try {
-            const response = await fetch('http://localhost:5000/api/sidebar'); // Flask backend endpoint
+            const response = await fetch(`${window.location.origin.includes(':3000') ? 'http://localhost:5000' : ''}/api/sidebar`); // Proxy to Flask when on Node (3000)
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Fetch page data from backend
-            const response = await fetch(`http://localhost:5000/api/pages/${actualPageSlug}`);
+            const response = await fetch(`${window.location.origin.includes(':3000') ? 'http://localhost:5000' : ''}/api/pages/${actualPageSlug}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

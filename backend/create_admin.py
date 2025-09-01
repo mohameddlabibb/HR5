@@ -10,11 +10,13 @@ cursor = conn.cursor()
 cursor.execute("SELECT * FROM users WHERE username = ?", (ADMIN_USERNAME,))
 user = cursor.fetchone()
 
-if not user:
-    cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (ADMIN_USERNAME, ADMIN_PASSWORD_HASH))
+if user:
+    cursor.execute("DELETE FROM users WHERE username = ?", (ADMIN_USERNAME,))
     conn.commit()
-    print('Admin user created')
-else:
-    print('Admin user already exists')
+    print('Admin user deleted')
+
+cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (ADMIN_USERNAME, ADMIN_PASSWORD_HASH))
+conn.commit()
+print('Admin user created')
 
 conn.close()

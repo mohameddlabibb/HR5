@@ -55,9 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Check if already authenticated on page load (e.g., if user navigates back)
-    if (adminToken) {
-        // Optionally, validate token with a quick API call
-        // For now, just redirect if token exists
-        window.location.href = '/admin_panel';
-    }
+    // if (adminToken) {
+    //     // Optionally, validate token with a quick API call
+    //     // For now, just redirect if token exists
+    //     window.location.href = '/admin_panel';
+    // }
 });
