@@ -1241,3 +1241,5 @@ if __name__ == '__main__':
     s.close()
 
     app.run(debug=True, port=5000, use_reloader=False)
+if __name__ == "__main__":
+    app.run(debug=True)

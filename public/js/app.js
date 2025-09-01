@@ -8,11 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageContentElement = document.getElementById('page-content');
     const breadcrumbsElement = document.getElementById('breadcrumbs');
 
-    // Function to fetch pages data from Flask backend
+    // Function to fetch pages data from backend via same-origin proxy to avoid CORS issues
     async function fetchPagesData() {
         try {
-            const response = await fetch(`${window.location.origin.includes(':3000') ? 'http://localhost:5000' : ''}/api/sidebar`); // Proxy to Flask when on Node (3000)
-            if (!response.ok) {
+            const response = await fetch('http://localhost:5000/api/sidebar');            if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
@@ -130,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 actualPageSlug = actualPageSlug.replace(/^\/pages\//, '').replace(/\.html$/, '');
             }
 
-            // Fetch page data from backend
-            const response = await fetch(`${window.location.origin.includes(':3000') ? 'http://localhost:5000' : ''}/api/pages/${actualPageSlug}`);
+            // Fetch page data from backend via same-origin proxy
+            const response = await fetch(`/api/pages/${actualPageSlug}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -142,9 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageTitleElement) pageTitleElement.textContent = pageData.title || 'Page Not Found';
             if (pageContentElement) pageContentElement.innerHTML = pageData.content || '<p>Content not found.</p>';
 
-            // Update breadcrumbs
+            // Update breadcrumbs (render exactly what the backend sends to avoid duplicates)
             if (breadcrumbsElement && pageData.breadcrumbs) {
-                let html = '<ol class="breadcrumb"><li class="breadcrumb-item"><a href="/index.html">Home</a></li>';
+                let html = '<ol class="breadcrumb">';
                 pageData.breadcrumbs.forEach(crumb => {
                     if (crumb.active) {
                         html += `<li class="breadcrumb-item active" aria-current="page">${crumb.title}</li>`;

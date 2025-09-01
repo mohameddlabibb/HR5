@@ -156,7 +156,7 @@ async function uploadFile(inputId) {
     logoutButton.addEventListener('click', () => {
         adminToken = null;
         localStorage.removeItem('adminToken');
-        window.location.href = '/admin.html'; // Redirect to login page
+        window.location.href = '/admin'; // Redirect to login page
     });
 
     /**
