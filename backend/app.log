@@ -70,3 +70,6 @@ sqlite3.OperationalError: no such table: users
 2025-09-01 14:57:32,603 - app - INFO - Serving admin_panel.html
 2025-09-01 15:10:25,076 - app - INFO - Serving admin_panel.html
 2025-09-01 15:21:08,191 - app - INFO - Serving admin_panel.html
+2025-09-01 15:21:40,175 - app - INFO - Serving admin_panel.html
+2025-09-01 15:21:40,889 - app - INFO - Serving admin_panel.html
+2025-09-01 15:26:08,582 - app - INFO - Serving admin_panel.html

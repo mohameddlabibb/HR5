@@ -248,6 +248,38 @@ def build_nested_pages(flat_pages, parent_id=None):
             nested_items.append(new_item)
     return nested_items
 
+
+def generate_breadcrumbs(current_slug, flat_pages):
+    """Generate breadcrumb list from root to the page with current_slug.
+    Returns a list of dicts: {title, url, active}
+    """
+    # Build index by id and by slug
+    pages_by_id = {p['id']: p for p in flat_pages}
+    page = next((p for p in flat_pages if p.get('slug') == current_slug), None)
+    if not page:
+        return [{'title': 'Home', 'url': '/index.html', 'active': False}]
+
+    chain = []
+    # Walk up parents
+    cur = page
+    while cur:
+        chain.append(cur)
+        parent_id = cur.get('parent_id')
+        cur = pages_by_id.get(parent_id) if parent_id else None
+    chain.reverse()
+
+    breadcrumbs = [{'title': 'Home', 'url': '/index.html', 'active': False}]
+    for idx, item in enumerate(chain):
+        is_last = idx == len(chain) - 1
+        slug = item.get('slug')
+        url = f"/pages/{slug}" if slug else '#'
+        breadcrumbs.append({
+            'title': item.get('title', 'Untitled'),
+            'url': url,
+            'active': is_last
+        })
+    return breadcrumbs
+
 # --- Database Helper Functions for Settings ---
 
 def get_setting(key):
