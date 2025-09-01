@@ -438,7 +438,8 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
                 document.getElementById('edit-page-video').value = pageToEdit.video || '';
                 document.getElementById('edit-page-published').checked = pageToEdit.published;
                 document.getElementById('edit-page-header-color').value = pageToEdit.design?.headerColor || '#f8f9fa';
-                document.getElementById('edit-page-header-image').value = pageToEdit.design?.headerImage || '';
+                // For header image, we don’t set the file input value programmatically.
+                // Optionally, you could show a small preview elsewhere using pageToEdit.design?.headerImage
                 document.getElementById('edit-page-meta-description').value = pageToEdit.meta_description || '';
                 document.getElementById('edit-page-meta-keywords').value = pageToEdit.meta_keywords || '';
                 document.getElementById('edit-page-custom-css').value = pageToEdit.custom_css || '';
@@ -470,12 +471,44 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
             published: document.getElementById('edit-page-published').checked,
             design: {
                 headerColor: document.getElementById('edit-page-header-color').value,
-                headerImage: document.getElementById('edit-page-header-image').value
+                headerImage: null // will set after potential upload
             },
             meta_description: document.getElementById('edit-page-meta-description').value,
             meta_keywords: document.getElementById('edit-page-meta-keywords').value,
             custom_css: document.getElementById('edit-page-custom-css').value
         };
+
+        // Handle header image file upload if provided
+        try {
+            const headerFileInput = document.getElementById('edit-page-header-image');
+            if (headerFileInput && headerFileInput.files && headerFileInput.files[0]) {
+                const formData = new FormData();
+                formData.append('file', headerFileInput.files[0]);
+                const uploadRes = await fetch('/api/admin/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') },
+                    body: formData
+                });
+                if (uploadRes.ok) {
+                    const uploadJson = await uploadRes.json();
+                    updatedPage.design.headerImage = uploadJson.file_path; // e.g. /uploads/uuid.png
+                } else {
+                    const errJson = await uploadRes.json().catch(() => ({}));
+                    alert('Header image upload failed: ' + (errJson.message || uploadRes.statusText));
+                    return;
+                }
+            } else {
+                // Keep previous header image if no new file picked: fetch from current page data
+                // We can read it from the modal by storing the loaded value in a data- attribute if needed.
+                // For simplicity, we’ll not override if null; backend will keep existing if not provided.
+                // To ensure backend keeps it, we’ll remove the key if still null.
+                delete updatedPage.design.headerImage;
+            }
+        } catch (err) {
+            console.error('Header image upload error:', err);
+            alert('Error uploading header image.');
+            return;
+        }
 
         // Basic validation
         if (!updatedPage.title || !updatedPage.slug) {

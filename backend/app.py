@@ -156,6 +156,25 @@ def ensure_pages_table_schema():
 # Run schema check at import time
 ensure_pages_table_schema()
 
+# Ensure ordering column exists for sidebar reordering
+def ensure_sort_index_column():
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cur = conn.cursor()
+        cur.execute("PRAGMA table_info(pages)")
+        cols = [r[1] for r in cur.fetchall()]
+        if 'sort_index' not in cols:
+            cur.execute("ALTER TABLE pages ADD COLUMN sort_index INTEGER DEFAULT 0")
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        try:
+            app.logger.warning(f"Adding sort_index failed: {e}")
+        except Exception:
+            pass
+
+ensure_sort_index_column()
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
@@ -252,6 +271,7 @@ def build_nested_pages(flat_pages, parent_id=None):
 def generate_breadcrumbs(current_slug, flat_pages):
     """Generate breadcrumb list from root to the page with current_slug.
     Returns a list of dicts: {title, url, active}
+    Avoids duplicating the Home crumb if the root item is already Home.
     """
     # Build index by id and by slug
     pages_by_id = {p['id']: p for p in flat_pages}
@@ -268,13 +288,30 @@ def generate_breadcrumbs(current_slug, flat_pages):
         cur = pages_by_id.get(parent_id) if parent_id else None
     chain.reverse()
 
-    breadcrumbs = [{'title': 'Home', 'url': '/index.html', 'active': False}]
+    breadcrumbs = []
+    # Add Home only if the first chain item is not already Home
+    first_title = (chain[0].get('title', '') if chain else '').strip().lower()
+    first_slug = (chain[0].get('slug', '') if chain else '').strip().lower()
+    # Normalize common home slugs
+    def is_home_slug(s: str) -> bool:
+        s = (s or '').strip().lower()
+        return s in ('', '/', 'index', 'home', 'index.html', 'home.html')
+    is_chain_home = first_title == 'home' or is_home_slug(first_slug)
+    if not is_chain_home:
+        breadcrumbs.append({'title': 'Home', 'url': '/index.html', 'active': False})
+
     for idx, item in enumerate(chain):
         is_last = idx == len(chain) - 1
-        slug = item.get('slug')
-        url = f"/pages/{slug}" if slug else '#'
+        slug = (item.get('slug') or '').strip()
+        # Special-case: if this item is the homepage, link to /index.html
+        if item.get('title', '').strip().lower() == 'home' or is_home_slug(slug):
+            url = '/index.html'
+            title = 'Home'
+        else:
+            url = f"/pages/{slug}" if slug else '#'
+            title = item.get('title', 'Untitled')
         breadcrumbs.append({
-            'title': item.get('title', 'Untitled'),
+            'title': title,
             'url': url,
             'active': is_last
         })
@@ -927,16 +964,24 @@ def reorder_sidebar():
 
     # Helper to recursively update parent_id
     def update_parent_ids_recursive(items, parent_id=None):
-        for item in items:
+        for idx, item in enumerate(items):
             page_id = item['id']
-            # Fetch existing page data to preserve all fields
+            # Fetch existing page data to preserve all fields and set sort_index
             existing_page = get_page_by_id_db(conn, page_id)
             if existing_page:
-                update_page_db(conn, page_id, existing_page['title'], existing_page['slug'],
-                               existing_page['content'], existing_page['published'], existing_page['is_chapter'],
-                               parent_id, existing_page['design'], existing_page['meta_description'],
-                               existing_page['meta_keywords'], existing_page['custom_css'],
-                               existing_page.get('placeholder_image'), existing_page.get('embedded_video'))
+                # Update sort_index in design or separate column if present
+                # We use a direct SQL to set sort_index without altering other fields unnecessarily
+                try:
+                    cur = conn.cursor()
+                    cur.execute("UPDATE pages SET parent_id = ?, sort_index = ? WHERE id = ?", (parent_id, idx, page_id))
+                    conn.commit()
+                except Exception:
+                    # Fallback to full update if needed
+                    update_page_db(conn, page_id, existing_page['title'], existing_page['slug'],
+                                   existing_page['content'], existing_page['published'], existing_page['is_chapter'],
+                                   parent_id, existing_page['design'], existing_page['meta_description'],
+                                   existing_page['meta_keywords'], existing_page['custom_css'],
+                                   existing_page.get('placeholder_image'), existing_page.get('embedded_video'))
             if 'children' in item and item['children']:
                 update_parent_ids_recursive(item['children'], page_id)
 
@@ -983,11 +1028,14 @@ def create_page():
     POST /api/admin/pages
     Creates a new page or chapter. Requires authentication.
     Minimal required fields: title, slug, content. Others optional.
+    Additionally:
+    - If a parent is provided, ensure the slug is prefixed with the parent's slug.
+    - Assign sort_index to append at the end of the selected parent's children.
     """
     data = request.get_json() or {}
 
     title = data.get('title')
-    slug = data.get('slug')
+    incoming_slug = data.get('slug')
     content = data.get('content', '')
     published = bool(data.get('published', True))
     is_chapter = bool(data.get('is_chapter', False))
@@ -999,17 +1047,45 @@ def create_page():
     placeholder_image = data.get('placeholder_image')
     embedded_video = data.get('embedded_video')
 
-    if not title or not slug:
-        return jsonify({'message': 'Title and slug are required'}), 400
+    if not title:
+        return jsonify({'message': 'Title is required'}), 400
+
+    # Normalize/compute slug on the server to ensure consistency
+    def slugify(text: str) -> str:
+        import re
+        text = (text or "").strip().lower()
+        text = re.sub(r"['\"]", "", text)
+        text = re.sub(r"[^a-z0-9]+", "-", text)
+        text = re.sub(r"(^-|-$)+", "", text)
+        return text
 
     conn = get_db()
-    # Allow same slug under different parents: enforce uniqueness only when no parent
+
+    # If parent is set, ensure slug begins with parent's slug prefix
+    parent_slug_prefix = ""
+    if parent_id:
+        parent_page = get_page_by_id_db(conn, parent_id)
+        if parent_page and parent_page.get('slug'):
+            parent_slug_prefix = parent_page['slug'] + "-"
+
+    # If incoming slug missing or not aligned with parent, recompute
+    if not incoming_slug:
+        slug = f"{parent_slug_prefix}{slugify(title)}"
+    else:
+        # Keep user-provided but enforce parent prefix when parent selected
+        if parent_slug_prefix and not incoming_slug.startswith(parent_slug_prefix):
+            slug = f"{parent_slug_prefix}{slugify(title)}"
+        else:
+            slug = incoming_slug
+
+    # Allow same slug under different parents: enforce collision only within same parent
     existing = get_page_by_slug_db(conn, slug)
     if existing and (not parent_id or existing.get('parent_id') == parent_id):
         return jsonify({'message': 'Slug already exists for this location'}), 409
 
     page_id = str(uuid.uuid4()) if not is_chapter else slug
 
+    # Insert page
     add_page_db(
         conn,
         page_id,
@@ -1026,6 +1102,22 @@ def create_page():
         placeholder_image,
         embedded_video,
     )
+
+    # Place at end of its siblings by setting sort_index = max + 1 for this parent
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COALESCE(MAX(sort_index), -1) + 1 FROM pages WHERE (parent_id IS ? OR parent_id = ?)",
+            (parent_id, parent_id)
+        )
+        next_index = cur.fetchone()[0] or 0
+        cur.execute("UPDATE pages SET sort_index = ? WHERE id = ?", (next_index, page_id))
+        conn.commit()
+    except Exception as e:
+        try:
+            app.logger.warning(f"Failed to set sort_index for new page {page_id}: {e}")
+        except Exception:
+            pass
 
     return jsonify({'message': 'Page created successfully', 'id': page_id, 'slug': slug}), 201
 

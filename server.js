@@ -24,7 +24,14 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
   }
 }));
 
+// ✅ Serve uploaded assets at /uploads from public/uploads (images/videos)
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
+// ✅ Proxy API requests to Flask backend (includes Authorization headers)
+app.use('/api', createProxyMiddleware({
+  target: 'http://localhost:5000',
+  changeOrigin: true,
+}));
 
 // ✅ Handle React/HTML fallback (if frontend routing is used)
 app.get('*', (req, res) => {

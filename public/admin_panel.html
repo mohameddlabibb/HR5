@@ -153,11 +153,11 @@
                             <textarea class="form-control" id="add-page-content" rows="10"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="add-page-image" class="form-label">Placeholder Image URL (e.g., /uploads/image.jpg)</label>
+                            <label for="add-page-image" class="form-label">Upload Image</label>
                             <input type="file" class="form-control" id="add-page-image" accept="image/*">
                         </div>
                         <div class="mb-3">
-                            <label for="add-page-video" class="form-label">Embedded Video URL (e.g., YouTube embed link)</label>
+                            <label for="add-page-video" class="form-label">Upload Video</label>
                             <input type="file" class="form-control" id="add-page-video"  accept="video/*">
                         </div>
                         <div class="mb-3">
@@ -175,8 +175,8 @@
                             <input type="color" class="form-control form-control-color" id="add-page-header-color" value="#f8f9fa">
                         </div>
                         <div class="mb-3">
-                            <label for="add-page-header-image" class="form-label">Header Background Image URL (e.g., /uploads/header.jpg)</label>
-                            <input type="file" class="form-control" id="add-page-header-image">
+                            <label for="add-page-header-image" class="form-label">Upload Header Background Image</label>
+                            <input type="file" class="form-control" id="add-page-header-image" accept="image/*">
                         </div>
                         <div class="mb-3">
                             <label for="add-page-meta-description" class="form-label">Meta Description</label>
@@ -381,12 +381,12 @@ document.addEventListener("DOMContentLoaded", function() {
                             <textarea class="form-control" id="edit-page-content" rows="10"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="edit-page-image" class="form-label">Placeholder Image URL</label>
-                            <input type="text" class="form-control" id="edit-page-image">
+                            <label for="edit-page-image" class="form-label">Upload Image</label>
+                            <input type="file" class="form-control" id="edit-page-image" accept="image/*">
                         </div>
                         <div class="mb-3">
-                            <label for="edit-page-video" class="form-label">Embedded Video URL</label>
-                            <input type="text" class="form-control" id="edit-page-video">
+                            <label for="edit-page-video" class="form-label">Upload Video</label>
+                            <input type="file" class="form-control" id="edit-page-video" accept="video/*">
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="edit-page-published">
@@ -397,8 +397,9 @@ document.addEventListener("DOMContentLoaded", function() {
                             <input type="color" class="form-control form-control-color" id="edit-page-header-color">
                         </div>
                         <div class="mb-3">
-                            <label for="edit-page-header-image" class="form-label">Header Background Image URL</label>
-                            <input type="text" class="form-control" id="edit-page-header-image">
+                            <label for="edit-page-header-image" class="form-label">Upload Header Background Image</label>
+                            <input type="file" class="form-control" id="edit-page-header-image" accept="image/*">
+                            <div class="form-text">If you don’t select a new file, the current header image stays unchanged.</div>
                         </div>
                         <div class="mb-3">
                             <label for="edit-page-meta-description" class="form-label">Meta Description</label>

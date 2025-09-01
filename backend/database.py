@@ -57,8 +57,9 @@ def add_page_db(conn, page_id, title, slug, content, published, is_chapter, pare
     return cur.lastrowid
 
 def get_all_pages_db(conn):
-    """Retrieve all pages/chapters from the database."""
-    sql = '''SELECT * FROM pages'''
+    """Retrieve all pages/chapters from the database ordered for sidebar."""
+    # Order by parent_id then sort_index then created_at
+    sql = '''SELECT * FROM pages ORDER BY COALESCE(parent_id, ''), sort_index ASC, created_at ASC'''
     cur = conn.cursor()
     cur.execute(sql)
     rows = cur.fetchall()

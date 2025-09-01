@@ -73,3 +73,8 @@ sqlite3.OperationalError: no such table: users
 2025-09-01 15:21:40,175 - app - INFO - Serving admin_panel.html
 2025-09-01 15:21:40,889 - app - INFO - Serving admin_panel.html
 2025-09-01 15:26:08,582 - app - INFO - Serving admin_panel.html
+2025-09-01 15:35:35,557 - app - INFO - Serving admin_panel.html
+2025-09-01 15:44:37,875 - app - INFO - Serving admin_panel.html
+2025-09-01 15:51:57,097 - app - INFO - Serving admin_panel.html
+2025-09-01 15:56:08,790 - app - INFO - User 'admin' logged in successfully.
+2025-09-01 15:56:08,822 - app - INFO - Serving admin_panel.html
