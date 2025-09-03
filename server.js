@@ -2,10 +2,47 @@
 const express = require('express');
 const path = require('path');
 const mime = require('mime-types'); // Import mime-types
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const http = require('http');
 
 const app = express();
 const PORT = 3000;
+
+// ✅ Manual proxy for API requests to Flask backend
+app.use('/api/*', (req, res) => {
+  console.log('Proxying request:', req.method, req.originalUrl);
+  
+  const options = {
+    hostname: 'localhost',
+    port: 5000,
+    path: req.originalUrl,
+    method: req.method,
+    headers: {
+      ...req.headers,
+      host: 'localhost:5000'
+    }
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    console.log('Proxy response:', proxyRes.statusCode, 'for', req.originalUrl);
+    
+    // Set response headers
+    res.status(proxyRes.statusCode);
+    Object.keys(proxyRes.headers).forEach(key => {
+      res.set(key, proxyRes.headers[key]);
+    });
+
+    // Pipe the response
+    proxyRes.pipe(res);
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('Proxy error:', err.message);
+    res.status(500).json({ error: 'Backend service unavailable' });
+  });
+
+  // Pipe the request body if it exists
+  req.pipe(proxyReq);
+});
 
 // Serve admin pages directly from Node static files
 app.get('/admin_panel', (req, res) => {
@@ -26,12 +63,6 @@ app.use('/public', express.static(path.join(__dirname, 'public'), {
 
 // ✅ Serve uploaded assets at /uploads from public/uploads (images/videos)
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
-
-// ✅ Proxy API requests to Flask backend (includes Authorization headers)
-app.use('/api', createProxyMiddleware({
-  target: 'http://localhost:5000',
-  changeOrigin: true,
-}));
 
 // ✅ Handle React/HTML fallback (if frontend routing is used)
 app.get('*', (req, res) => {

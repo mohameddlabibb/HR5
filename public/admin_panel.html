@@ -21,7 +21,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/public/js/admin_panel.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <script src="/public/js/admin_panel.js?v=1"></script>
 
     <!-- Admin Dashboard Section -->
     <section id="admin-dashboard" class="container mt-5">
@@ -48,7 +49,16 @@
             <!-- Page Management Tab -->
             <div class="tab-pane fade show active" id="pages" role="tabpanel" aria-labelledby="pages-tab">
                 <div class="card mt-3">
-                    <div class="card-header">Page Management</div>
+                    <div class="card-header d-flex align-items-center justify-content-between">Page Management
+                        <div class="d-flex align-items-center">
+                            <label for="page-visibility-filter" class="me-2 mb-0">Filter:</label>
+                            <select id="page-visibility-filter" class="form-select form-select-sm" style="width:auto;">
+                                <option value="all" selected>All</option>
+                                <option value="public">Guest Pages</option>
+                                <option value="private">Private Pages</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="card-body">
                         <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addPageModal">Add New Page/Chapter</button>
                         <div id="pages-list">
@@ -135,8 +145,11 @@
                             <label for="add-page-title" class="form-label">Title</label>
                             <input type="text" class="form-control" id="add-page-title" required>
                         </div>
-                        <!-- Slug is auto-generated; keep hidden to avoid user input -->
-                        <input type="hidden" id="add-page-slug">
+                        <div class="mb-3">
+                            <label for="add-page-slug" class="form-label">Slug</label>
+                            <input type="text" class="form-control" id="add-page-slug" placeholder="Auto or custom (e.g., our-values)">
+                            <div class="form-text">Parent prefix will be applied automatically if a parent is selected.</div>
+                        </div>
                         <div class="mb-3">
                             <label for="add-page-parent" class="form-label">Parent Chapter (optional)</label>
                             <select class="form-select" id="add-page-parent">
@@ -149,47 +162,27 @@
                             <label class="form-check-label" for="add-page-is-chapter">Is this a Chapter (can have sub-pages)?</label>
                         </div>
                         <div class="mb-3">
-                            <label for="add-page-content" class="form-label">Content (HTML or Markdown)</label>
+                            <label for="add-page-content" class="form-label">Content</label>
                             <textarea class="form-control" id="add-page-content" rows="10"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="add-page-image" class="form-label">Upload Image</label>
-                            <input type="file" class="form-control" id="add-page-image" accept="image/*">
-                        </div>
-                        <div class="mb-3">
-                            <label for="add-page-video" class="form-label">Upload Video</label>
-                            <input type="file" class="form-control" id="add-page-video"  accept="video/*">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Media Preview</label>
-                            <div id="media-preview-container" class="media-preview-container">
-                                <p id="no-media-placeholder">No media uploaded yet</p>
-                            </div>
-                        </div>
+                        <!-- Media inputs removed: images/videos managed inside CKEditor content -->
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="add-page-published" checked>
                             <label class="form-check-label" for="add-page-published">Published</label>
                         </div>
                         <div class="mb-3">
+                            <label for="add-page-privacy" class="form-label">Visibility</label>
+                            <select class="form-select" id="add-page-privacy">
+                                <option value="public" selected>Public (anyone)</option>
+                                <option value="private">Private (Somabay employees only)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="add-page-header-color" class="form-label">Header Color (e.g., #f8f9fa)</label>
                             <input type="color" class="form-control form-control-color" id="add-page-header-color" value="#f8f9fa">
                         </div>
-                        <div class="mb-3">
-                            <label for="add-page-header-image" class="form-label">Upload Header Background Image</label>
-                            <input type="file" class="form-control" id="add-page-header-image" accept="image/*">
-                        </div>
-                        <div class="mb-3">
-                            <label for="add-page-meta-description" class="form-label">Meta Description</label>
-                            <textarea class="form-control" id="add-page-meta-description" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="add-page-meta-keywords" class="form-label">Meta Keywords (comma-separated)</label>
-                            <input type="text" class="form-control" id="add-page-meta-keywords">
-                        </div>
-                        <div class="mb-3">
-                            <label for="add-page-custom-css" class="form-label">Custom CSS</label>
-                            <textarea class="form-control" id="add-page-custom-css" rows="5"></textarea>
-                        </div>
+
+                        <button type="button" class="btn btn-secondary me-2" id="preview-page-button">Show Preview</button>
                         <button type="submit" class="btn btn-primary">Add Page</button>
                     </form>
                 </div>
@@ -199,161 +192,13 @@
 
     <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const addPageImageInput = document.getElementById("add-page-image");
-    const addPageVideoInput = document.getElementById("add-page-video");
-    const mediaPreviewContainer = document.getElementById("media-preview-container");
-    const noMediaPlaceholder = document.getElementById("no-media-placeholder");
-
-    function displayMediaPreview(file) {
-        if (!file) {
-            mediaPreviewContainer.innerHTML = '';
-            noMediaPlaceholder.style.display = 'block';
-            return;
+    // Initialize CKEditor for rich content editing
+    if (window.CKEDITOR && document.getElementById('add-page-content')) {
+        if (!(CKEDITOR.instances && CKEDITOR.instances['add-page-content'])) {
+            CKEDITOR.replace('add-page-content');
         }
-
-        noMediaPlaceholder.style.display = 'none';
-        mediaPreviewContainer.innerHTML = ''; // Clear previous preview
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const fileType = file.type.split('/')[0]; // "image" or "video"
-            if (fileType === "image") {
-                const img = document.createElement("img");
-                img.src = e.target.result;
-                img.classList.add("img-fluid", "mx-auto", "d-block", "mt-2"); // Bootstrap classes for responsiveness and centering
-                mediaPreviewContainer.appendChild(img);
-            } else if (fileType === "video") {
-                const video = document.createElement("video");
-                video.src = e.target.result;
-                video.controls = true;
-                video.classList.add("img-fluid", "mx-auto", "d-block", "mt-2"); // Bootstrap classes for responsiveness and centering
-                mediaPreviewContainer.appendChild(video);
-            }
-        };
-        reader.readAsDataURL(file);
     }
-
-    addPageImageInput.addEventListener("change", function() {
-        if (this.files && this.files[0]) {
-            displayMediaPreview(this.files[0]);
-            // Clear video input if image is selected
-            addPageVideoInput.value = '';
-        } else {
-            displayMediaPreview(null);
-        }
-    });
-
-    addPageVideoInput.addEventListener("change", function() {
-        if (this.files && this.files[0]) {
-            displayMediaPreview(this.files[0]);
-            // Clear image input if video is selected
-            addPageImageInput.value = '';
-        } else {
-            displayMediaPreview(null);
-        }
-    });
-
-    document.getElementById("add-page-form").addEventListener("submit", async function(e) {
-        e.preventDefault();
-
-        // Gather basic text fields
-        const title = document.getElementById("add-page-title").value;
-        const parentId = document.getElementById("add-page-parent").value || null;
-        const isChapter = document.getElementById("add-page-is-chapter").checked;
-        const content = document.getElementById("add-page-content").value;
-
-        // Auto-generate hierarchical slug using parent's slug when chosen
-        function slugify(text) {
-            return (text || "")
-                .toString()
-                .trim()
-                .toLowerCase()
-                .replace(/['"]/g, "")
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/(^-|-$)+/g, "");
-        }
-
-        let slug;
-        if (parentId) {
-            const parentOption = document.querySelector(`#add-page-parent option[value="${parentId}"]`);
-            const parentSlug = parentOption ? (parentOption.dataset.slug || "") : "";
-            slug = (parentSlug ? `${parentSlug}-` : "") + slugify(title);
-        } else {
-            slug = slugify(title);
-        }
-
-        let placeholderImage = null;
-        let embeddedVideo = null;
-
-        async function uploadFile(file) {
-            const formData = new FormData();
-            formData.append("file", file);
-            const res = await fetch("/api/admin/upload", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + localStorage.getItem("adminToken")
-                },
-                body: formData
-            });
-            if (res.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem("adminToken");
-                window.location.href = "/admin.html";
-                return null;
-            }
-            const data = await res.json();
-            if (res.ok) {
-                return data.file_path;
-            } else {
-                alert("Upload failed: " + (data.message || res.statusText));
-                return null;
-            }
-        }
-
-        const imageFile = document.getElementById("add-page-image").files[0];
-        if (imageFile) {
-            placeholderImage = await uploadFile(imageFile);
-        }
-
-        const videoFile = document.getElementById("add-page-video").files[0];
-        if (videoFile) {
-            embeddedVideo = await uploadFile(videoFile);
-        }
-
-        const pagePayload = {
-            title,
-            slug,
-            content,
-            parent_id: parentId,
-            is_chapter: isChapter,
-            placeholder_image: placeholderImage,
-            embedded_video: embeddedVideo
-        };
-
-        const res = await fetch("/api/admin/pages", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + localStorage.getItem("adminToken")
-            },
-            body: JSON.stringify(pagePayload)
-        });
-
-        if (res.status === 401) {
-            alert("Session expired. Please log in again.");
-            localStorage.removeItem("adminToken");
-            window.location.href = "/admin.html";
-            return;
-        }
-
-        const result = await res.json();
-        if (res.ok) {
-            alert("Page saved successfully!");
-            window.location.reload();
-        } else {
-            alert("Error saving page: " + (result.message || res.statusText));
-        }
-    });
+    // Form submission is handled by admin_panel.js - no duplicate handler needed here
 });
 </script>
 
@@ -380,14 +225,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             <label for="edit-page-content" class="form-label">Content (HTML or Markdown)</label>
                             <textarea class="form-control" id="edit-page-content" rows="10"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="edit-page-image" class="form-label">Upload Image</label>
-                            <input type="file" class="form-control" id="edit-page-image" accept="image/*">
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit-page-video" class="form-label">Upload Video</label>
-                            <input type="file" class="form-control" id="edit-page-video" accept="video/*">
-                        </div>
+                        <!-- Media inputs removed in Edit modal as well; manage within CKEditor content -->
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="edit-page-published">
                             <label class="form-check-label" for="edit-page-published">Published</label>
@@ -396,22 +234,13 @@ document.addEventListener("DOMContentLoaded", function() {
                             <label for="edit-page-header-color" class="form-label">Header Color</label>
                             <input type="color" class="form-control form-control-color" id="edit-page-header-color">
                         </div>
+
                         <div class="mb-3">
-                            <label for="edit-page-header-image" class="form-label">Upload Header Background Image</label>
-                            <input type="file" class="form-control" id="edit-page-header-image" accept="image/*">
-                            <div class="form-text">If you don’t select a new file, the current header image stays unchanged.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit-page-meta-description" class="form-label">Meta Description</label>
-                            <textarea class="form-control" id="edit-page-meta-description" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit-page-meta-keywords" class="form-label">Meta Keywords (comma-separated)</label>
-                            <input type="text" class="form-control" id="edit-page-meta-keywords">
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit-page-custom-css" class="form-label">Custom CSS</label>
-                            <textarea class="form-control" id="edit-page-custom-css" rows="5"></textarea>
+                            <label for="edit-page-privacy" class="form-label">Visibility</label>
+                            <select class="form-select" id="edit-page-privacy">
+                                <option value="public">Public (anyone)</option>
+                                <option value="private">Private (Somabay employees only)</option>
+                            </select>
                         </div>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                         <button type="button" class="btn btn-danger" id="delete-page-button">Delete Page</button>
@@ -574,7 +403,6 @@ document.addEventListener("DOMContentLoaded", function() {
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <!-- Optional: Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JavaScript -->
-    <script src="js/admin_panel.js?v=1"></script>
+    <!-- Custom JavaScript loaded earlier -->
 </body>
 </html>

@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{% block meta_description %}{{ page.meta_description | default('Somabay Handbook provides comprehensive information about our company, destination, benefits, and policies.') }}{% endblock %}">
-    <meta name="keywords" content="{% block meta_keywords %}{{ page.meta_keywords | default('Somabay, handbook, company, destination, benefits, policies, HR') }}{% endblock %}">
     <title>{% block title %}Somabay Handbook{% if page.title %} - {{ page.title }}{% endif %}{% endblock %}</title>
     <!-- Optional: Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/public/css/main.css">
-    {% if page.custom_css %}
-    <style>
-        {page.custom_css | safe};
-    </style>
-    {% endif %}
 </head>
 <body>
     <div class="wrapper">
@@ -42,30 +35,12 @@
             {% if (page.design | default({})).headerColor %}
                 {% set _ = header_styles.append('background-color: ' ~ page.design.headerColor ~ ';') %}
             {% endif %}
-            {% if (page.design | default({})).headerImage %}
-                {% set _ = header_styles.append('background-image: url(\'' ~ page.design.headerImage ~ '\');') %}
-            {% endif %}
-            <header class="content-header" id="content-header" {% if header_styles %}style="{{ header_styles | join(' ') }}"{% endif %}>
+            <header class="content-header" id="content-header" {% if (page.design | default({})).headerColor %}style="background-color: {{ page.design.headerColor }};"{% endif %}>
                 <h1 id="page-title">{% block page_title %}{{ page.title | default('Welcome to Somabay Handbook') }}{% endblock %}</h1>
-                {% block header_image %}
-                {% if (page.design | default({})).headerImage %}
-                <img id="header-image" src="{{ page.design.headerImage }}" alt="Header Image" class="img-fluid header-image">
-                {% elif page.title == 'Welcome to Somabay Handbook' %}
-                <img id="header-image" src="/public/uploads/default-header.jpg" alt="Header Image" class="img-fluid header-image">
-                {% endif %}
-                {% endblock %}
             </header>
             <section class="page-content" id="page-content">
                 {% block page_content %}
                 <!-- Page content will be dynamically loaded here or rendered statically -->
-                <p>Select an item from the sidebar to view its content.</p>
-                <p>This is a placeholder for the main content area. The actual content will be loaded dynamically based on your selection in the sidebar navigation.</p>
-                <p>Here's a placeholder image:</p>
-                <img src="/public/uploads/placeholder-image.jpg" alt="Placeholder Content Image" class="img-fluid content-image">
-                <p>And a placeholder video:</p>
-                <div class="video-container">
-                    <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
                 {% endblock %}
             </section>
         </main>

@@ -2,6 +2,12 @@
 // Client-side JavaScript for the Somabay Handbook Admin Panel dashboard.
 // Handles page management (CRUD), sidebar reordering, image uploads, and design options.
 
+// Guard against double-initialization (e.g., duplicate script includes)
+if (window.__ADMIN_PANEL_INITIALIZED__) {
+  console.log('Admin panel already initialized. Skipping re-init.');
+} else {
+  window.__ADMIN_PANEL_INITIALIZED__ = true;
+
 async function uploadFile(inputId) {
   const fileInput = document.getElementById(inputId);
   if (!fileInput || fileInput.files.length === 0) {
@@ -76,6 +82,37 @@ async function uploadFile(inputId) {
     let currentEditingWidget = null; // Stores the widget object being edited
 
     let adminToken = localStorage.getItem('adminToken'); // Retrieve token from local storage
+    
+    // Function to refresh adminToken from localStorage
+    function refreshAdminToken() {
+        adminToken = localStorage.getItem('adminToken');
+        return adminToken;
+    }
+
+    // Initialize CKEditor 5 for add/edit content
+    let addPageEditor = null;
+    let editPageEditor = null;
+    
+    if (window.ClassicEditor) {
+        if (document.getElementById('add-page-content')) {
+            ClassicEditor.create(document.getElementById('add-page-content'))
+                .then(editor => {
+                    addPageEditor = editor;
+                })
+                .catch(error => {
+                    console.error('Error initializing add-page editor:', error);
+                });
+        }
+        if (document.getElementById('edit-page-content')) {
+            ClassicEditor.create(document.getElementById('edit-page-content'))
+                .then(editor => {
+                    editPageEditor = editor;
+                })
+                .catch(error => {
+                    console.error('Error initializing edit-page editor:', error);
+                });
+        }
+    }
 
     // --- Utility Functions ---
 
@@ -99,7 +136,8 @@ async function uploadFile(inputId) {
      * @returns {boolean} True if a token exists, false otherwise.
      */
     function isAuthenticated() {
-        return !!adminToken;
+        const token = localStorage.getItem('adminToken');
+        return !!token;
     }
 
     /**
@@ -164,11 +202,76 @@ async function uploadFile(inputId) {
      */
     function showAdminDashboard() {
         console.log('Showing admin dashboard'); // Debugging
-        adminDashboardSection.style.display = 'block';
+        console.log('Admin dashboard section:', adminDashboardSection);
+        if (adminDashboardSection) {
+            adminDashboardSection.style.display = 'block';
+            console.log('Dashboard display set to block');
+        } else {
+            console.error('Admin dashboard section not found!');
+        }
         loadAdminData(); // Load pages and sidebar structure
         // Initialize Bootstrap tabs
         const adminTab = new bootstrap.Tab(document.getElementById('pages-tab'));
         adminTab.show();
+
+        // Wire up filter change
+        const filterSelect = document.getElementById('page-visibility-filter');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', fetchPagesList);
+        }
+
+        // Set up event delegation for edit and toggle buttons (works even after re-rendering)
+        if (pagesList) {
+            pagesList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-page-btn')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Edit button clicked via delegation for page ID:', e.target.dataset.id);
+                    openEditPageModal(e.target.dataset.id);
+                } else if (e.target.classList.contains('toggle-visibility-btn')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    togglePageVisibility(e.target.dataset.id, e.target.dataset.published === 'true');
+                }
+            });
+        }
+
+        // Preview button
+        const previewBtn = document.getElementById('preview-page-button');
+        if (previewBtn) {
+            previewBtn.addEventListener('click', () => {
+                const title = document.getElementById('add-page-title')?.value || 'Preview Title';
+                const content = addPageEditor ? addPageEditor.getData() : (document.getElementById('add-page-content')?.value || '');
+                const iw = document.getElementById('add-image-width')?.value;
+                const ih = document.getElementById('add-image-height')?.value;
+                const vw = document.getElementById('add-video-width')?.value;
+                const vh = document.getElementById('add-video-height')?.value;
+                const imageWidth = parseInt(iw || '0', 10) || null;
+                const imageHeight = parseInt(ih || '0', 10) || null;
+                const videoWidth = parseInt(vw || '0', 10) || null;
+                const videoHeight = parseInt(vh || '0', 10) || null;
+
+                const previewTitle = document.getElementById('preview-title');
+                const previewContent = document.getElementById('preview-content');
+                if (!previewTitle || !previewContent) {
+                    alert('Preview area is missing.');
+                    return;
+                }
+                previewTitle.textContent = title;
+                previewContent.innerHTML = content;
+
+                // Append media preview sizing
+                const imgEl = previewContent.querySelector('img');
+                if (imgEl && imageWidth) imgEl.style.maxWidth = imageWidth + 'px';
+                if (imgEl && imageHeight) imgEl.style.maxHeight = imageHeight + 'px';
+                const videoEl = previewContent.querySelector('video');
+                if (videoEl && videoWidth) videoEl.style.maxWidth = videoWidth + 'px';
+                if (videoEl && videoHeight) videoEl.style.maxHeight = videoHeight + 'px';
+
+                const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                modal.show();
+            });
+        }
     }
 
     // --- Data Loading and Rendering ---
@@ -189,19 +292,40 @@ async function uploadFile(inputId) {
      */
     async function fetchPagesList() {
         try {
-            const response = await fetch('/api/sidebar', { headers: getAuthHeaders() });
+            console.log('Fetching pages list...');
+            refreshAdminToken(); // Ensure we have the latest token
+            const headers = getAuthHeaders();
+            console.log('Using headers:', headers);
+            
+            const response = await fetch('/api/sidebar', { headers: headers });
+            console.log('Response status:', response.status);
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const sidebar = await response.json();
+            console.log('Sidebar data received:', sidebar);
+            
             const allPages = flattenSidebar(sidebar); // Get a flat list of all pages
-            renderPagesList(allPages);
+            console.log('All pages flattened:', allPages.length, 'pages');
+
+            // Apply filter
+            const filterSelect = document.getElementById('page-visibility-filter');
+            const filterVal = filterSelect ? filterSelect.value : 'all';
+            const filtered = allPages.filter(p => {
+                if (filterVal === 'private') return !!p.is_private;
+                if (filterVal === 'public') return !p.is_private;
+                return true;
+            });
+            console.log('Filtered pages:', filtered.length, 'pages');
+
+            renderPagesList(filtered);
         } catch (error) {
             console.error('Error fetching pages list:', error);
             pagesList.innerHTML = '<p class="text-danger">Failed to load pages.</p>';
             if (error.message.includes('401')) {
-                alert('Session expired. Please log in again.'); // Use alert for now
-                logoutButton.click(); // Force logout on unauthorized
+                alert('Session expired. Please log in again.');
+                logoutButton.click();
             }
         }
     }
@@ -211,8 +335,12 @@ async function uploadFile(inputId) {
      * @param {Array} pages - The array of page objects.
      */
     function renderPagesList(pages) {
+        console.log('Rendering pages list with', pages.length, 'pages');
+        console.log('Pages list element:', pagesList);
+        
         pagesList.innerHTML = '';
         if (pages.length === 0) {
+            console.log('No pages to render');
             pagesList.innerHTML = '<p>No pages found. Add a new page.</p>';
             return;
         }
@@ -223,8 +351,9 @@ async function uploadFile(inputId) {
         pages.forEach(page => {
             const li = document.createElement('li');
             li.classList.add('list-group-item');
+            const privacyBadge = page.is_private ? '<span class="badge bg-warning text-dark ms-2">Private</span>' : '<span class="badge bg-success ms-2">Public</span>';
             li.innerHTML = `
-                <span>${page.title} (${page.slug}) - ${page.published ? 'Published' : 'Draft'}</span>
+                <span>${page.title} (${page.slug}) - ${page.published ? 'Published' : 'Draft'} ${privacyBadge}</span>
                 <div class="page-actions">
                     <button class="btn btn-sm btn-info edit-page-btn" data-id="${page.id}">Edit</button>
                     <button class="btn btn-sm btn-${page.published ? 'secondary' : 'success'} toggle-visibility-btn" data-id="${page.id}" data-published="${page.published}">
@@ -238,10 +367,19 @@ async function uploadFile(inputId) {
 
         // Add event listeners for edit and toggle visibility buttons
         document.querySelectorAll('.edit-page-btn').forEach(button => {
-            button.addEventListener('click', (e) => openEditPageModal(e.target.dataset.id));
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Edit button clicked for page ID:', e.target.dataset.id);
+                openEditPageModal(e.target.dataset.id);
+            });
         });
         document.querySelectorAll('.toggle-visibility-btn').forEach(button => {
-            button.addEventListener('click', (e) => togglePageVisibility(e.target.dataset.id, e.target.dataset.published === 'true'));
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                togglePageVisibility(e.target.dataset.id, e.target.dataset.published === 'true');
+            });
         });
     }
 
@@ -364,10 +502,23 @@ async function uploadFile(inputId) {
 document.getElementById("add-page-form").addEventListener("submit", async function (e) {
   e.preventDefault();
 
-  const title = document.getElementById("add-page-title").value;
-  const parentId = document.getElementById("add-page-parent").value || null;
-  const isChapter = document.getElementById("add-page-is-chapter").checked;
-  const content = document.getElementById("add-page-content").value;
+  const titleEl = document.getElementById("add-page-title");
+  const parentEl = document.getElementById("add-page-parent");
+  const chapterEl = document.getElementById("add-page-is-chapter");
+  const contentEl = document.getElementById("add-page-content");
+  
+  if (!titleEl || !parentEl || !chapterEl || !contentEl) {
+    console.error("Missing form elements:", {titleEl, parentEl, chapterEl, contentEl});
+    alert("Form elements are missing. Please refresh the page.");
+    return;
+  }
+  
+  const title = titleEl.value;
+  const parentId = parentEl.value || null;
+  const isChapter = chapterEl.checked;
+  const content = (window.CKEDITOR && CKEDITOR.instances['add-page-content']) ? 
+    CKEDITOR.instances['add-page-content'].getData() : 
+    contentEl.value;
 
   // Build hierarchical slug using parent's slug when parent chosen
   function slugify(text) {
@@ -379,31 +530,68 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
   }
+  // Manual slug override if provided
+  const slugEl = document.getElementById('add-page-slug');
+  let slugInput = slugEl ? (slugEl.value || '').trim() : '';
   let slug;
+  if (slugInput) {
+    slug = slugify(slugInput);
+  } else {
+    // Generate from title
+    slug = slugify(title);
+  }
+  // Apply parent prefix if parent selected
   if (parentId) {
     const parentOption = document.querySelector(`#add-page-parent option[value="${parentId}"]`);
     const parentSlug = parentOption ? (parentOption.dataset.slug || "") : "";
-    slug = (parentSlug ? `${parentSlug}-` : "") + slugify(title);
-  } else {
-    slug = slugify(title);
+    if (parentSlug && !slug.startsWith(parentSlug + '-')) {
+      slug = `${parentSlug}-${slug}`;
+    }
   }
 
-  // Upload files if selected
-  const placeholderImage = await uploadFile("add-page-image");
-  const embeddedVideo = await uploadFile("add-page-video");
+  // Upload files if selected (these elements may not exist in simplified form)
+  // For now, skip file uploads as the elements don't exist in the current form
+  const placeholderImage = null;
+  const embeddedVideo = null;
+
+  // Media sizes packed in design for rendering ease (handle missing elements gracefully)
+  const imageWidthEl = document.getElementById('add-image-width');
+  const imageHeightEl = document.getElementById('add-image-height');
+  const videoWidthEl = document.getElementById('add-video-width');
+  const videoHeightEl = document.getElementById('add-video-height');
+  
+  const imageWidth = imageWidthEl ? (parseInt(imageWidthEl.value || '0', 10) || null) : null;
+  const imageHeight = imageHeightEl ? (parseInt(imageHeightEl.value || '0', 10) || null) : null;
+  const videoWidth = videoWidthEl ? (parseInt(videoWidthEl.value || '0', 10) || null) : null;
+  const videoHeight = videoHeightEl ? (parseInt(videoHeightEl.value || '0', 10) || null) : null;
 
   // Send to backend
+  const privacySelect = document.getElementById('add-page-privacy');
+  const isPrivate = privacySelect && privacySelect.value === 'private';
+
   const response = await fetch("/api/admin/pages", {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("adminToken")
+    },
     body: JSON.stringify({
       title: title,
       slug: slug,
       content: content,
       parent_id: parentId,
       is_chapter: isChapter,
+      is_private: isPrivate,
       placeholder_image: placeholderImage,
-      embedded_video: embeddedVideo
+      embedded_video: embeddedVideo,
+      design: { 
+        headerColor: document.getElementById('add-page-header-color')?.value || '#f8f9fa', 
+        headerImage: null, 
+        imageWidth, 
+        imageHeight, 
+        videoWidth, 
+        videoHeight 
+      }
     })
   });
 
@@ -421,28 +609,41 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
      * @param {string} pageId - The ID of the page to edit.
      */
     async function openEditPageModal(pageId) {
+        console.log('openEditPageModal called with pageId:', pageId);
         try {
-            const response = await fetch('/api/sidebar', { headers: getAuthHeaders() });
+            console.log('Fetching page data from API...');
+            const response = await fetch(`/api/admin/pages/${pageId}`, { headers: getAuthHeaders() });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const sidebar = await response.json();
-            const pageToEdit = findPageById(sidebar, pageId);
+            const pageToEdit = await response.json();
 
             if (pageToEdit) {
-                document.getElementById('edit-page-id').value = pageToEdit.id;
-                document.getElementById('edit-page-title').value = pageToEdit.title;
-                document.getElementById('edit-page-slug').value = pageToEdit.slug || '';
-                document.getElementById('edit-page-content').value = pageToEdit.content || '';
-                document.getElementById('edit-page-image').value = pageToEdit.image || '';
-                document.getElementById('edit-page-video').value = pageToEdit.video || '';
-                document.getElementById('edit-page-published').checked = pageToEdit.published;
-                document.getElementById('edit-page-header-color').value = pageToEdit.design?.headerColor || '#f8f9fa';
-                // For header image, we don’t set the file input value programmatically.
-                // Optionally, you could show a small preview elsewhere using pageToEdit.design?.headerImage
-                document.getElementById('edit-page-meta-description').value = pageToEdit.meta_description || '';
-                document.getElementById('edit-page-meta-keywords').value = pageToEdit.meta_keywords || '';
-                document.getElementById('edit-page-custom-css').value = pageToEdit.custom_css || '';
+                const editIdEl = document.getElementById('edit-page-id');
+                if (editIdEl) editIdEl.value = pageToEdit.id;
+                
+                const editTitleEl = document.getElementById('edit-page-title');
+                if (editTitleEl) editTitleEl.value = pageToEdit.title;
+                
+                const editSlugEl = document.getElementById('edit-page-slug');
+                if (editSlugEl) editSlugEl.value = pageToEdit.slug || '';
+                // Set content in CKEditor 5 or fallback to textarea
+                if (editPageEditor) {
+                    editPageEditor.setData(pageToEdit.content || '');
+                } else {
+                    const editContentEl = document.getElementById('edit-page-content');
+                    if (editContentEl) editContentEl.value = pageToEdit.content || '';
+                }
+                // Media inputs removed; nothing to set here
+                const editPublishedEl = document.getElementById('edit-page-published');
+                if (editPublishedEl) editPublishedEl.checked = pageToEdit.published;
+                
+                const editHeaderColorEl = document.getElementById('edit-page-header-color');
+                if (editHeaderColorEl) editHeaderColorEl.value = pageToEdit.design?.headerColor || '#f8f9fa';
+                const editPrivacy = document.getElementById('edit-page-privacy');
+                if (editPrivacy) {
+                    editPrivacy.value = pageToEdit.is_private ? 'private' : 'public';
+                }
 
                 $('#editPageModal').modal('show');
             } else {
@@ -461,54 +662,19 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
     editPageForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const pageId = document.getElementById('edit-page-id').value;
+        const pageId = document.getElementById('edit-page-id')?.value;
         const updatedPage = {
-            title: document.getElementById('edit-page-title').value,
-            slug: document.getElementById('edit-page-slug').value,
-            content: document.getElementById('edit-page-content').value,
-            image: document.getElementById('edit-page-image').value,
-            video: document.getElementById('edit-page-video').value,
-            published: document.getElementById('edit-page-published').checked,
+            title: document.getElementById('edit-page-title')?.value || '',
+            slug: document.getElementById('edit-page-slug')?.value || '',
+            content: editPageEditor ? editPageEditor.getData() : (document.getElementById('edit-page-content')?.value || ''),
+            published: !!document.getElementById('edit-page-published')?.checked,
             design: {
-                headerColor: document.getElementById('edit-page-header-color').value,
-                headerImage: null // will set after potential upload
-            },
-            meta_description: document.getElementById('edit-page-meta-description').value,
-            meta_keywords: document.getElementById('edit-page-meta-keywords').value,
-            custom_css: document.getElementById('edit-page-custom-css').value
+                headerColor: document.getElementById('edit-page-header-color')?.value || '#f8f9fa'
+            }
         };
 
-        // Handle header image file upload if provided
-        try {
-            const headerFileInput = document.getElementById('edit-page-header-image');
-            if (headerFileInput && headerFileInput.files && headerFileInput.files[0]) {
-                const formData = new FormData();
-                formData.append('file', headerFileInput.files[0]);
-                const uploadRes = await fetch('/api/admin/upload', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') },
-                    body: formData
-                });
-                if (uploadRes.ok) {
-                    const uploadJson = await uploadRes.json();
-                    updatedPage.design.headerImage = uploadJson.file_path; // e.g. /uploads/uuid.png
-                } else {
-                    const errJson = await uploadRes.json().catch(() => ({}));
-                    alert('Header image upload failed: ' + (errJson.message || uploadRes.statusText));
-                    return;
-                }
-            } else {
-                // Keep previous header image if no new file picked: fetch from current page data
-                // We can read it from the modal by storing the loaded value in a data- attribute if needed.
-                // For simplicity, we’ll not override if null; backend will keep existing if not provided.
-                // To ensure backend keeps it, we’ll remove the key if still null.
-                delete updatedPage.design.headerImage;
-            }
-        } catch (err) {
-            console.error('Header image upload error:', err);
-            alert('Error uploading header image.');
-            return;
-        }
+        // No header image support: explicitly clear header image on update
+        updatedPage.design.headerImage = null;
 
         // Basic validation
         if (!updatedPage.title || !updatedPage.slug) {
@@ -517,6 +683,10 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
         }
 
         try {
+            const editPrivacy = document.getElementById('edit-page-privacy');
+            if (editPrivacy) {
+                updatedPage.is_private = (editPrivacy.value === 'private');
+            }
             const response = await fetch(`/api/admin/pages/${updatedPage.slug}`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
@@ -1357,9 +1527,16 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
     });
 
     // --- Initial Load ---
+    refreshAdminToken(); // Refresh token from localStorage
+    console.log('Admin token on load:', adminToken ? 'Present' : 'Missing');
+    
     if (isAuthenticated()) {
+        console.log('User is authenticated, showing dashboard');
+        console.log('Admin dashboard element:', adminDashboardSection);
         showAdminDashboard();
     } else {
+        console.log('User not authenticated, redirecting to login');
         // If not authenticated, redirect to login page
-        window.location.href = '/admin.html';
-    }});
+        window.location.href = '/admin';
+    }
+})};

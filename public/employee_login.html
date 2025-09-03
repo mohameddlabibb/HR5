@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Login</title>
+  <link rel="stylesheet" href="/public/css/main.css" />
+  <link rel="stylesheet" href="/public/css/admin.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="admin-body">
+  <div class="admin-wrapper container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white border-0 text-center pt-4">
+            <img src="\public\uploads\Logo-somabay.png" alt="Somabay" style="max-height:48px"/>
+            <h5 class="mt-3 mb-0">Employee Access</h5>
+            <p class="text-muted small mb-0">Sign in with your Somabay email</p>
+          </div>
+          <div class="card-body p-4">
+            <form id="employee-login-form">
+              <div class="mb-3">
+                <label for="employee-email" class="form-label">Email address</label>
+                <input type="email" class="form-control form-control-lg" id="employee-email" placeholder="name@somabay.com" required />
+                <div class="form-text">Access is limited to @somabay.com emails.</div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg w-100">Continue</button>
+              <div id="employee-login-message" class="mt-3"></div>
+            </form>
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          <a href="/" class="text-decoration-none">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/public/js/employee_login.js"></script>
+</body>
+</html>

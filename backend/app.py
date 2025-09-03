@@ -175,6 +175,42 @@ def ensure_sort_index_column():
 
 ensure_sort_index_column()
 
+# Ensure archive table for deleted pages exists (only stores deleted items)
+
+def ensure_pages_old_table():
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pages_old (
+                id TEXT,
+                title TEXT,
+                slug TEXT,
+                content TEXT,
+                published BOOLEAN,
+                is_chapter BOOLEAN,
+                parent_id TEXT,
+                design TEXT,
+                meta_description TEXT,
+                meta_keywords TEXT,
+                custom_css TEXT,
+                summary TEXT,
+                placeholder_image TEXT,
+                embedded_video TEXT
+            )
+            """
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        try:
+            app.logger.warning(f"Ensuring pages_old failed: {e}")
+        except Exception:
+            pass
+
+ensure_pages_old_table()
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
@@ -290,8 +326,8 @@ def generate_breadcrumbs(current_slug, flat_pages):
 
     breadcrumbs = []
     # Add Home only if the first chain item is not already Home
-    first_title = (chain[0].get('title', '') if chain else '').strip().lower()
-    first_slug = (chain[0].get('slug', '') if chain else '').strip().lower()
+    first_title = (chain[0].get('title', '') or '' if chain else '').strip().lower()
+    first_slug = (chain[0].get('slug', '') or '' if chain else '').strip().lower()
     # Normalize common home slugs
     def is_home_slug(s: str) -> bool:
         s = (s or '').strip().lower()
@@ -304,12 +340,12 @@ def generate_breadcrumbs(current_slug, flat_pages):
         is_last = idx == len(chain) - 1
         slug = (item.get('slug') or '').strip()
         # Special-case: if this item is the homepage, link to /index.html
-        if item.get('title', '').strip().lower() == 'home' or is_home_slug(slug):
+        if (item.get('title', '') or '').strip().lower() == 'home' or is_home_slug(slug):
             url = '/index.html'
             title = 'Home'
         else:
             url = f"/pages/{slug}" if slug else '#'
-            title = item.get('title', 'Untitled')
+            title = item.get('title', '') or 'Untitled'
         breadcrumbs.append({
             'title': title,
             'url': url,
@@ -416,6 +452,33 @@ def delete_widget(name):
     db.commit()
     return cursor.rowcount
 
+# --- Employee Login Endpoints ---
+
+@app.route('/api/employee/login', methods=['POST'])
+def employee_login():
+    """Simple employee login that enables access to private pages for Somabay employees.
+    Accepts JSON { email }. Validates domain contains '@somabay' (case-insensitive).
+    Sets session['employee_auth'] = True on success.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        email = (data.get('email') or '').strip()
+        if not email:
+            return jsonify({'message': 'Email is required'}), 400
+        if '@somabay' not in email.lower():
+            return jsonify({'message': 'Email must be a Somabay address'}), 401
+        session['employee_auth'] = True
+        session['employee_email'] = email
+        return jsonify({'message': 'Employee login successful'}), 200
+    except Exception as e:
+        return jsonify({'message': 'An internal server error occurred', 'error': str(e)}), 500
+
+@app.route('/api/employee/logout', methods=['POST'])
+def employee_logout():
+    session.pop('employee_auth', None)
+    session.pop('employee_email', None)
+    return jsonify({'message': 'Logged out'}), 200
+
 # --- Authentication Decorator ---
 
 def token_required(f):
@@ -454,31 +517,63 @@ def get_sidebar():
     """
     GET /api/sidebar
     Returns the complete sidebar navigation structure from the database.
-    This endpoint is public and does not require authentication.
+    Public endpoint, but will include private pages when:
+    - An authenticated admin token is provided in Authorization header, or
+    - An employee session is active (after employee login).
     """
     conn = get_db()
     flat_pages = get_all_pages_db(conn)
 
-    # Build the nested structure from the flat list
+    # Determine if private pages should be included
+    include_private = False
+
+    # Allow if employee session set
+    try:
+        if session.get('employee_auth'):
+            include_private = True
+    except Exception:
+        pass
+
+    # Allow if a valid admin bearer token is provided
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        try:
+            token_type, token = auth_header.split()
+            if token_type.lower() == 'bearer':
+                cur = conn.cursor()
+                cur.execute("SELECT 1 FROM users WHERE token = ?", (token,))
+                if cur.fetchone():
+                    include_private = True
+        except Exception:
+            pass
+
+    # Build the nested structure from the flat list (allow nested subpages under any parent chapter)
     nested_pages = build_nested_pages(flat_pages)
 
-    # Filter out draft pages for public view
-    def filter_published(items):
+    # Filter out draft pages and, unless allowed, private pages
+    def filter_items(items):
         filtered = []
         for item in items:
             try:
-                if item.get('published', False):  # Only include published items
-                    new_item = item.copy()
-                    if 'children' in new_item:
-                        new_item['children'] = filter_published(new_item['children'])
-                    filtered.append(new_item)
+                if not item.get('published', False):
+                    continue
+                # Keep private items in the tree only for authenticated viewers
+                if item.get('is_private', False) and not include_private:
+                    continue
+                new_item = item.copy()
+                # Ensure children is a list when is_chapter
+                if new_item.get('is_chapter', False):
+                    new_item['children'] = filter_items(new_item.get('children', []))
+                else:
+                    # Non-chapter pages should not expose children array
+                    new_item.pop('children', None)
+                filtered.append(new_item)
             except Exception as e:
                 print(f"Error filtering item {item.get('id', 'unknown')}: {e}")
         return filtered
 
-    public_sidebar = filter_published(nested_pages)
-    print(f"Public Sidebar Data: {public_sidebar}")  # Debugging line
-    return jsonify(public_sidebar)
+    sidebar = filter_items(nested_pages)
+    return jsonify(sidebar)
 
 
 @app.route('/api/pages/<slug>', methods=['GET'])
@@ -486,16 +581,66 @@ def get_page(slug):
     """
     GET /api/pages/<slug>
     Returns a single page by its slug.
+    Private pages require either employee session or admin token.
     """
     conn = get_db()
     page = get_page_by_slug_db(conn, slug)
     if page:
+        # Block private pages unless employee or admin
+        if page.get('is_private', False):
+            allow = False
+            try:
+                if session.get('employee_auth'):
+                    allow = True
+            except Exception:
+                pass
+            if not allow:
+                auth_header = request.headers.get('Authorization')
+                if auth_header:
+                    try:
+                        token_type, token = auth_header.split()
+                        if token_type.lower() == 'bearer':
+                            cur = conn.cursor()
+                            cur.execute("SELECT 1 FROM users WHERE token = ?", (token,))
+                            if cur.fetchone():
+                                allow = True
+                    except Exception:
+                        pass
+            if not allow:
+                return jsonify({'message': 'Unauthorized'}), 401
+
         # Fetch all pages for breadcrumb generation
         flat_pages = get_all_pages_db(conn)
         breadcrumbs = generate_breadcrumbs(slug, flat_pages)
-        # Sanitize HTML content using the defined ALLOWED_TAGS and ALLOWED_ATTRIBUTES
-        sanitized_content = bleach.clean(page['content'], tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
-        return jsonify({'title': page['title'], 'content': sanitized_content, 'breadcrumbs': breadcrumbs}), 200
+
+        # Build sidebar for this page context (respect private/public rules)
+        include_private = bool(session.get('employee_auth'))
+        nested = build_nested_pages(flat_pages)
+        def filter_items(items):
+            out = []
+            for it in items:
+                if not it.get('published', False):
+                    continue
+                if it.get('is_private', False) and not include_private:
+                    continue
+                new_it = it.copy()
+                if 'children' in new_it:
+                    new_it['children'] = filter_items(new_it['children'])
+                out.append(new_it)
+            return out
+        sidebar = filter_items(nested)
+
+        # Sanitize HTML content
+        sanitized_content = bleach.clean(page['content'] or '', tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+        return jsonify({
+            'title': page['title'],
+            'content': sanitized_content,
+            'breadcrumbs': breadcrumbs,
+            'sidebar': sidebar,
+            'placeholder_image': page.get('placeholder_image'),
+            'embedded_video': page.get('embedded_video'),
+            'design': page.get('design') or {},
+        }), 200
     return jsonify({'message': 'Page not found'}), 404
 
 
@@ -761,84 +906,7 @@ def delete_single_widget(name):
         return jsonify({'message': 'Widget deleted successfully', 'name': name}), 200
     return jsonify({'message': 'Widget not found'}), 404
 
-@app.route('/api/admin/pages', methods=['POST'])
-@token_required
-def add_page():
-    """
-    POST /api/admin/pages
-    Creates a new page with optional image and video.
-    """
-    data = request.get_json()
 
-    title = data.get('title')
-    provided_slug = data.get('slug')  # may be client-generated
-    content = data.get('content')
-    placeholder_image = data.get('placeholder_image')
-    embedded_video = data.get('embedded_video')
-    parent_id = data.get('parent_id')
-    is_chapter = bool(data.get('is_chapter', False))
-
-    if not title:
-        return jsonify({'message': 'Title is required'}), 400
-
-    # Server-side slugify and hierarchical slug generation
-    def slugify(text: str) -> str:
-        import re
-        text = (text or "").strip().lower()
-        text = re.sub(r"['\"]", "", text)
-        text = re.sub(r"[^a-z0-9]+", "-", text)
-        text = re.sub(r"(^-|-$)+", "", text)
-        return text
-
-    # Build slug from parent if provided
-    conn = get_db()
-    parent_slug_part = ""
-    if parent_id:
-        parent_page = get_page_by_id_db(conn, parent_id)
-        if parent_page and parent_page.get('slug'):
-            parent_slug_part = parent_page['slug'] + "-"
-
-    generated_slug = parent_slug_part + slugify(title)
-    # If client passed a slug, ignore it and use generated_slug to enforce consistency
-    slug = generated_slug
-
-    # NOTE: We allow duplicate slugs globally, but not under the same parent.
-    # Check for duplicate within same parent scope only.
-    existing_same = None
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM pages WHERE slug = ? AND (parent_id IS ? OR parent_id = ?) LIMIT 1", (slug, parent_id, parent_id))
-    existing_same = cur.fetchone()
-    if existing_same:
-        # If collision, append a short suffix
-        suffix = 2
-        base_slug = slug
-        while True:
-            trial = f"{base_slug}-{suffix}"
-            cur.execute("SELECT 1 FROM pages WHERE slug = ? AND (parent_id IS ? OR parent_id = ?) LIMIT 1", (trial, parent_id, parent_id))
-            if not cur.fetchone():
-                slug = trial
-                break
-            suffix += 1
-
-    page_id = str(uuid.uuid4())  # Generate unique ID
-
-    add_page_db(conn,
-                page_id=page_id,
-                title=title,
-                slug=slug,
-                content=content,
-                published=True,
-                is_chapter=is_chapter,
-                parent_id=parent_id,
-                design={},
-                meta_description='',
-                meta_keywords='',
-                custom_css='',
-                placeholder_image=placeholder_image,
-                embedded_video=embedded_video
-    )
-
-    return jsonify({'message': 'Page created successfully', 'page_id': page_id, 'slug': slug}), 201
 
 @app.route('/api/admin/pages/<slug>', methods=['PUT'])
 @token_required
@@ -862,9 +930,15 @@ def edit_page(slug):
     is_chapter = data.get('is_chapter', page_to_edit['is_chapter'])
     parent_id = data.get('parent_id', page_to_edit['parent_id'])
     design = data.get('design', page_to_edit['design'])
-    meta_description = data.get('meta_description', page_to_edit['meta_description'])
-    meta_keywords = data.get('meta_keywords', page_to_edit['meta_keywords'])
-    custom_css = data.get('custom_css', page_to_edit['custom_css'])
+    # Remove meta/custom CSS and headerImage from design on update
+    if 'headerImage' in design:
+        try:
+            design.pop('headerImage', None)
+        except Exception:
+            pass
+    meta_description = None
+    meta_keywords = None
+    custom_css = None
     placeholder_image = data.get('placeholder_image', page_to_edit['placeholder_image'])
     embedded_video = data.get('embedded_video', page_to_edit['embedded_video'])
 
@@ -899,7 +973,9 @@ def edit_page(slug):
                 break
             suffix += 1
 
-    update_page_db(conn, page_to_edit['id'], title, new_slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
+    # Include is_private in updates (default to existing when not provided)
+    is_private = data.get('is_private', page_to_edit.get('is_private', False))
+    update_page_db(conn, page_to_edit['id'], title, new_slug, content, published, is_private, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
     
     return jsonify({'message': 'Page updated successfully', 'slug': new_slug}), 200
 
@@ -908,16 +984,50 @@ def edit_page(slug):
 def delete_page(slug):
     """
     DELETE /api/admin/pages/<slug>
-    Deletes a page by its slug. Requires authentication.
+    Archives the page into pages_old, then deletes it from pages. Requires authentication.
     """
     conn = get_db()
+    cur = conn.cursor()
     page_to_delete = get_page_by_slug_db(conn, slug)
 
     if not page_to_delete:
         return jsonify({'message': 'Page not found'}), 404
 
+    # Archive into pages_old first (only store deletions)
+    try:
+        cur.execute(
+            """
+            INSERT INTO pages_old (id, title, slug, content, published, is_chapter, parent_id, design,
+                                   meta_description, meta_keywords, custom_css, summary, placeholder_image, embedded_video)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                page_to_delete.get('id'),
+                page_to_delete.get('title'),
+                page_to_delete.get('slug'),
+                page_to_delete.get('content'),
+                int(bool(page_to_delete.get('published'))),
+                int(bool(page_to_delete.get('is_chapter'))),
+                page_to_delete.get('parent_id'),
+                json.dumps(page_to_delete.get('design', {})),
+                page_to_delete.get('meta_description'),
+                page_to_delete.get('meta_keywords'),
+                page_to_delete.get('custom_css'),
+                None,  # summary not used in current model
+                page_to_delete.get('placeholder_image'),
+                page_to_delete.get('embedded_video'),
+            )
+        )
+        conn.commit()
+    except Exception as e:
+        try:
+            app.logger.warning(f"Archiving page {slug} to pages_old failed: {e}")
+        except Exception:
+            pass
+
+    # Now delete from main pages table
     delete_page_db(conn, page_to_delete['id'])
-    return jsonify({'message': 'Page deleted successfully'}), 200
+    return jsonify({'message': 'Page deleted and archived successfully'}), 200
 
 @app.route('/api/admin/pages/<page_id>/visibility', methods=['PUT'])
 @token_required
@@ -940,7 +1050,7 @@ def toggle_page_visibility(page_id):
 
     # Update only the published status
     update_page_db(conn, page_to_update['id'], page_to_update['title'], page_to_update['slug'],
-                   page_to_update['content'], published_status, page_to_update['is_chapter'],
+                   page_to_update['content'], published_status, page_to_update.get('is_private', 0), page_to_update['is_chapter'],
                    page_to_update['parent_id'], page_to_update['design'],
                    page_to_update['meta_description'], page_to_update['meta_keywords'],
                    page_to_update['custom_css'], page_to_update['placeholder_image'], page_to_update['embedded_video'])
@@ -998,7 +1108,7 @@ def update_page_design(page_id):
     """
     data = request.get_json()
     header_color = data.get('headerColor')
-    header_image = data.get('headerImage')
+    # Header images are no longer supported; ignore any provided value
 
     conn = get_db()
     page_to_update = get_page_by_id_db(conn, page_id)
@@ -1010,16 +1120,36 @@ def update_page_design(page_id):
 
     if header_color is not None:
         design['headerColor'] = header_color
-    if header_image is not None:
-        design['headerImage'] = header_image
+    # Ensure headerImage is removed
+    if 'headerImage' in design:
+        design.pop('headerImage', None)
 
     update_page_db(conn, page_to_update['id'], page_to_update['title'], page_to_update['slug'],
-                   page_to_update['content'], page_to_update['published'], page_to_update['is_chapter'],
+                   page_to_update['content'], page_to_update['published'], page_to_update.get('is_private', 0), page_to_update['is_chapter'],
                    page_to_update['parent_id'], design, page_to_update['meta_description'],
                    page_to_update['meta_keywords'], page_to_update['custom_css'],
                    page_to_update['placeholder_image'], page_to_update['embedded_video'])
     
     return jsonify({'message': 'Page design updated successfully', 'design': design}), 200
+
+@app.route('/api/admin/pages/<page_id>', methods=['GET'])
+@token_required
+def get_page_by_id(page_id):
+    """
+    GET /api/admin/pages/<page_id>
+    Returns a single page by its ID for admin editing. Requires authentication.
+    """
+    try:
+        conn = get_db()
+        page = get_page_by_id_db(conn, page_id)
+        
+        if not page:
+            return jsonify({'message': 'Page not found'}), 404
+        
+        return jsonify(page), 200
+    except Exception as e:
+        app.logger.error(f"Error fetching page {page_id}: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
 
 @app.route('/api/admin/pages', methods=['POST'])
 @token_required
@@ -1031,6 +1161,7 @@ def create_page():
     Additionally:
     - If a parent is provided, ensure the slug is prefixed with the parent's slug.
     - Assign sort_index to append at the end of the selected parent's children.
+    - Accept is_private flag to mark page as private (employee-only) or public.
     """
     data = request.get_json() or {}
 
@@ -1038,12 +1169,14 @@ def create_page():
     incoming_slug = data.get('slug')
     content = data.get('content', '')
     published = bool(data.get('published', True))
+    is_private = bool(data.get('is_private', False))
     is_chapter = bool(data.get('is_chapter', False))
     parent_id = data.get('parent_id')
-    design = data.get('design', {'headerColor': '#f8f9fa', 'headerImage': '/uploads/default-header.jpg'})
-    meta_description = data.get('meta_description')
-    meta_keywords = data.get('meta_keywords')
-    custom_css = data.get('custom_css')
+    design = data.get('design', {'headerColor': '#f8f9fa'})
+    # Meta and custom CSS removed from create API
+    meta_description = None
+    meta_keywords = None
+    custom_css = None
     placeholder_image = data.get('placeholder_image')
     embedded_video = data.get('embedded_video')
 
@@ -1093,12 +1226,13 @@ def create_page():
         slug,
         content,
         1 if published else 0,
+        1 if is_private else 0,
         1 if is_chapter else 0,
         parent_id,
         design,
         meta_description,
         meta_keywords,
-        custom_css,
+        None,  # custom_css removed when creating a new page
         placeholder_image,
         embedded_video,
     )

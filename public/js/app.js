@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to fetch pages data from backend via same-origin proxy to avoid CORS issues
     async function fetchPagesData() {
         try {
-            const response = await fetch('http://localhost:5000/api/sidebar');            if (!response.ok) {
+            // Use relative URL so it works behind the Node proxy (/api -> Flask)
+            const response = await fetch('/api/sidebar');
+            if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
@@ -19,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return data;
         } catch (error) {
             console.error('Error fetching pages data:', error);
+            // Show friendly message when backend is down or unreachable via proxy
+            const container = document.getElementById('page-content');
+            if (container) {
+                container.innerHTML = '<div class="alert alert-warning">Backend API is not reachable. Make sure Flask is running on port 5000. The Node server on port 3000 proxies /api to http://localhost:5000.</div>';
+            }
             return [];
         }
     }
@@ -129,8 +136,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 actualPageSlug = actualPageSlug.replace(/^\/pages\//, '').replace(/\.html$/, '');
             }
 
+            // Clean up leading slashes and handle root/index cases
+            actualPageSlug = actualPageSlug.replace(/^\/+/, '');
+            
+            if (!actualPageSlug || actualPageSlug === 'index') {
+                // Avoid calling /api/pages/index; nothing to show yet
+                return;
+            }
+
             // Fetch page data from backend via same-origin proxy
             const response = await fetch(`/api/pages/${actualPageSlug}`);
+            if (response.status === 401) {
+                // Require employee login for private content
+                window.location.href = '/public/employee_login.html';
+                return;
+            }
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -140,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update page title and content
             if (pageTitleElement) pageTitleElement.textContent = pageData.title || 'Page Not Found';
             if (pageContentElement) pageContentElement.innerHTML = pageData.content || '<p>Content not found.</p>';
+
+            // Media placeholders removed; CKEditor content will handle embedded media within page content.
 
             // Update breadcrumbs (render exactly what the backend sends to avoid duplicates)
             if (breadcrumbsElement && pageData.breadcrumbs) {
@@ -155,19 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 breadcrumbsElement.innerHTML = html;
             }
 
-            // Render sidebar safely (only if pageData.sidebar exists)
-            if (pageData.sidebar && sidebarMenu) {
-                sidebarMenu.innerHTML = '';
-                pageData.sidebar.forEach(item => {
-                    const li = document.createElement('li');
-                    li.classList.add('sidebar-item');
-                    const a = document.createElement('a');
-                    a.href = `/pages/${item.slug}`;
-                    a.textContent = item.title;
-                    li.appendChild(a);
-                    sidebarMenu.appendChild(li);
-                });
-            }
+            // Don't replace the sidebar - it's already built correctly with proper hierarchy
+            // The pageData.sidebar is sent by the backend but we don't need to re-render it
+            // since the initial sidebar build already handles the hierarchical structure properly
 
         } catch (error) {
             console.error('Error loading page content:', error);
@@ -188,7 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (submenu) submenu.style.display = 'none';
         });
 
+        // Initial load: if landing on / or /index.html, try loading default page if any
         highlightActiveLink();
+        const initialPath = window.location.pathname === '/' ? '/index.html' : window.location.pathname;
+        loadPageContent(initialPath);
 
         sidebarMenu.addEventListener('click', (e) => {
             const link = e.target.closest('.menu-link, .submenu-link');

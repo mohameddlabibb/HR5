@@ -44,13 +44,13 @@ def get_user(conn, username):
     return cur.fetchone()
 
 # --- Page Functions ---
-def add_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video):
+def add_page_db(conn, page_id, title, slug, content, published, is_private, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video):
     """Insert a new page or chapter into the database."""
-    sql = '''INSERT INTO pages(id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
-             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    sql = '''INSERT INTO pages(id, title, slug, content, published, is_private, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video)
+             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute(sql, (
-        page_id, title, slug, content, published, is_chapter,
+        page_id, title, slug, content, published, is_private, is_chapter,
         parent_id, json.dumps(design), meta_description, meta_keywords, custom_css, placeholder_image, embedded_video
     ))
     conn.commit()
@@ -67,6 +67,7 @@ def get_all_pages_db(conn):
     for row in rows:
         page = dict(row)
         page['published'] = bool(page['published'])
+        page['is_private'] = bool(page.get('is_private', 0))
         page['is_chapter'] = bool(page['is_chapter'])
         page['design'] = json.loads(page['design']) if page['design'] else {}
         pages.append(page)
@@ -81,6 +82,7 @@ def get_page_by_id_db(conn, page_id):
     if row:
         page = dict(row)
         page['published'] = bool(page['published'])
+        page['is_private'] = bool(page.get('is_private', 0))
         page['is_chapter'] = bool(page['is_chapter'])
         page['design'] = json.loads(page['design']) if page['design'] else {}
         return page
@@ -100,21 +102,22 @@ def get_page_by_slug_db(conn, slug, parent_id=None):
     if row:
         page = dict(row)
         page['published'] = bool(page['published'])
+        page['is_private'] = bool(page.get('is_private', 0))
         page['is_chapter'] = bool(page['is_chapter'])
         page['design'] = json.loads(row['design']) if row['design'] else {}
         return page
     return None
 
-def update_page_db(conn, page_id, title, slug, content, published, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video):
+def update_page_db(conn, page_id, title, slug, content, published, is_private, is_chapter, parent_id, design, meta_description, meta_keywords, custom_css, placeholder_image, embedded_video):
     """Update an existing page or chapter in the database."""
     sql = '''UPDATE pages
-             SET title = ?, slug = ?, content = ?, published = ?, is_chapter = ?,
+             SET title = ?, slug = ?, content = ?, published = ?, is_private = ?, is_chapter = ?,
                  parent_id = ?, design = ?, meta_description = ?, meta_keywords = ?, custom_css = ?,
                  placeholder_image = ?, embedded_video = ?
              WHERE id = ?'''
     cur = conn.cursor()
     cur.execute(sql, (
-        title, slug, content, published, is_chapter,
+        title, slug, content, published, is_private, is_chapter,
         parent_id, json.dumps(design), meta_description, meta_keywords, custom_css,
         placeholder_image, embedded_video, page_id
     ))
@@ -170,6 +173,7 @@ if __name__ == '__main__':
         slug TEXT,
         content TEXT,
         published BOOLEAN NOT NULL,
+        is_private BOOLEAN NOT NULL DEFAULT 0,
         is_chapter BOOLEAN NOT NULL,
         parent_id TEXT,
         design TEXT,
@@ -178,6 +182,7 @@ if __name__ == '__main__':
         custom_css TEXT,
         placeholder_image TEXT,
         embedded_video TEXT,
+        sort_index INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (parent_id) REFERENCES pages(id) ON DELETE CASCADE
     );

@@ -22,13 +22,13 @@ def read_pages_data():
         return []
     with open(PAGES_FILE, 'r', encoding='utf-8') as f:
         data = json.load(f)
-        # Prepend '/public' to image paths if not already present
+        # Normalize content image src paths to include '/public'
         def update_image_paths(items):
             for item in items:
                 if isinstance(item, dict):
+                    # Drop headerImage if present; no longer used
                     if 'design' in item and isinstance(item['design'], dict):
-                        if 'headerImage' in item['design'] and item['design']['headerImage'] and not item['design']['headerImage'].startswith(STATIC_ASSETS_PREFIX):
-                            item['design']['headerImage'] = STATIC_ASSETS_PREFIX + item['design']['headerImage']
+                        item['design'].pop('headerImage', None)
                     if 'content' in item and isinstance(item['content'], str):
                         # Replace src="/uploads with src="/public/uploads
                         item['content'] = item['content'].replace('src="/uploads', f'src="{STATIC_ASSETS_PREFIX}/uploads')

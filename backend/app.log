@@ -89,3 +89,61 @@ sqlite3.OperationalError: no such table: users
 2025-09-01 16:33:15,774 - app - INFO - Serving admin_panel.html
 2025-09-01 16:33:17,767 - app - INFO - Serving admin_panel.html
 2025-09-01 17:01:40,759 - app - INFO - Serving admin_panel.html
+2025-09-02 08:44:00,516 - app - INFO - Serving admin_panel.html
+2025-09-02 08:46:18,705 - app - INFO - User 'admin' logged in successfully.
+2025-09-02 08:46:18,745 - app - INFO - Serving admin_panel.html
+2025-09-02 09:37:08,322 - app - INFO - Serving admin_panel.html
+2025-09-02 09:37:09,503 - app - INFO - Serving admin_panel.html
+2025-09-02 09:38:43,091 - app - INFO - Serving admin_panel.html
+2025-09-02 09:38:43,679 - app - INFO - Serving admin_panel.html
+2025-09-02 09:41:56,960 - app - INFO - Serving admin_panel.html
+2025-09-02 09:43:50,796 - app - INFO - Serving admin_panel.html
+2025-09-02 09:43:52,120 - app - INFO - Serving admin_panel.html
+2025-09-02 09:52:13,648 - app - INFO - Serving admin_panel.html
+2025-09-02 09:52:14,279 - app - INFO - Serving admin_panel.html
+2025-09-02 12:05:27,854 - app - INFO - Serving admin_panel.html
+2025-09-02 12:06:24,894 - app - INFO - Serving admin_panel.html
+2025-09-02 13:02:26,079 - app - INFO - Serving admin_panel.html
+2025-09-02 13:05:23,658 - app - INFO - Serving admin_panel.html
+2025-09-02 13:05:37,463 - app - INFO - User 'admin' logged in successfully.
+2025-09-02 13:05:37,528 - app - INFO - Serving admin_panel.html
+2025-09-02 13:08:16,210 - app - INFO - Serving admin_panel.html
+2025-09-02 13:20:53,658 - app - INFO - Serving admin_panel.html
+2025-09-02 13:36:52,737 - app - INFO - Serving admin_panel.html
+2025-09-02 13:38:31,940 - app - INFO - Serving admin_panel.html
+2025-09-02 13:38:33,003 - app - INFO - Serving admin_panel.html
+2025-09-02 14:09:07,228 - app - INFO - Serving admin_panel.html
+2025-09-02 14:14:25,342 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:25:51,631 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:25:59,358 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:28:39,818 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:28:39,842 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:29:02,304 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:29:02,649 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:30:05,341 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:31:27,792 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:32:56,586 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:33:00,461 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:33:16,272 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:33:16,295 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:34:39,084 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:35:33,292 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:36:18,968 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:36:19,297 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:38:33,027 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:40:16,031 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:40:23,014 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:40:38,606 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:41:51,783 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:41:57,941 - backend.app - INFO - User 'admin' logged in successfully.
+2025-09-02 14:41:57,961 - backend.app - INFO - Serving admin_panel.html
+2025-09-02 14:50:44,435 - app - INFO - Serving admin_panel.html
+2025-09-02 14:51:13,999 - app - INFO - Serving admin_panel.html
+2025-09-02 14:54:29,153 - app - INFO - Serving admin_panel.html
+2025-09-02 15:09:24,123 - app - WARNING - Archiving page sportyyy123 to pages_old failed: UNIQUE constraint failed: pages_old.slug
+2025-09-02 15:09:41,038 - app - WARNING - Archiving page asdfghjk to pages_old failed: UNIQUE constraint failed: pages_old.slug
+2025-09-02 15:12:35,390 - app - INFO - Serving admin_panel.html
+2025-09-02 15:18:52,355 - app - INFO - Serving admin_panel.html
+2025-09-02 16:01:00,779 - app - INFO - Serving admin_panel.html
+2025-09-02 16:42:19,833 - app - INFO - Serving admin_panel.html
+2025-09-03 07:16:04,684 - app - INFO - Serving admin_panel.html
