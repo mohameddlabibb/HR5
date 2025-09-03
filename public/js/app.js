@@ -163,10 +163,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Media placeholders removed; CKEditor content will handle embedded media within page content.
 
-            // Update breadcrumbs (render exactly what the backend sends to avoid duplicates)
+            // Update breadcrumbs (deduplicate by title+url to avoid duplicates like double Home)
             if (breadcrumbsElement && pageData.breadcrumbs) {
-                let html = '<ol class="breadcrumb">';
+                const seen = new Set();
+                const deduped = [];
                 pageData.breadcrumbs.forEach(crumb => {
+                    const key = `${(crumb.title || '').trim().toLowerCase()}|${(crumb.url || '').trim().toLowerCase()}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        deduped.push(crumb);
+                    }
+                });
+
+                let html = '<ol class="breadcrumb">';
+                deduped.forEach(crumb => {
                     if (crumb.active) {
                         html += `<li class="breadcrumb-item active" aria-current="page">${crumb.title}</li>`;
                     } else {

@@ -164,6 +164,11 @@
                         <div class="mb-3">
                             <label for="add-page-content" class="form-label">Content</label>
                             <textarea class="form-control" id="add-page-content" rows="10"></textarea>
+                            <div class="mt-2 d-flex gap-2 align-items-center">
+                                <input type="file" id="add-insert-video-input" accept="video/*" style="display:none;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="add-insert-video-btn">Insert Video</button>
+                                <small class="text-muted">Use the image button in the editor toolbar for images; use Insert Video to upload videos.</small>
+                            </div>
                         </div>
                         <!-- Media inputs removed: images/videos managed inside CKEditor content -->
                         <div class="mb-3 form-check">
@@ -182,7 +187,6 @@
                             <input type="color" class="form-control form-control-color" id="add-page-header-color" value="#f8f9fa">
                         </div>
 
-                        <button type="button" class="btn btn-secondary me-2" id="preview-page-button">Show Preview</button>
                         <button type="submit" class="btn btn-primary">Add Page</button>
                     </form>
                 </div>
@@ -190,17 +194,7 @@
         </div>
     </div>
 
-    <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Initialize CKEditor for rich content editing
-    if (window.CKEDITOR && document.getElementById('add-page-content')) {
-        if (!(CKEDITOR.instances && CKEDITOR.instances['add-page-content'])) {
-            CKEDITOR.replace('add-page-content');
-        }
-    }
-    // Form submission is handled by admin_panel.js - no duplicate handler needed here
-});
-</script>
+
 
     <!-- Edit Page Modal -->
     <div class="modal fade" id="editPageModal" tabindex="-1" aria-labelledby="editPageModalLabel" aria-hidden="true">
@@ -224,6 +218,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="mb-3">
                             <label for="edit-page-content" class="form-label">Content (HTML or Markdown)</label>
                             <textarea class="form-control" id="edit-page-content" rows="10"></textarea>
+                            <div class="mt-2 d-flex gap-2 align-items-center">
+                                <input type="file" id="edit-insert-video-input" accept="video/*" style="display:none;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="edit-insert-video-btn">Insert Video</button>
+                                <small class="text-muted">Use the image button in the editor toolbar for images; use Insert Video to upload videos.</small>
+                            </div>
                         </div>
                         <!-- Media inputs removed in Edit modal as well; manage within CKEditor content -->
                         <div class="mb-3 form-check">

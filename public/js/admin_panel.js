@@ -93,9 +93,52 @@ async function uploadFile(inputId) {
     let addPageEditor = null;
     let editPageEditor = null;
     
-    if (window.ClassicEditor) {
+    // CKEditor5 Custom Upload Adapter
+    class CkUploadAdapter {
+        constructor(loader, token) {
+            this.loader = loader;
+            this.token = token;
+            this.controller = new AbortController();
+        }
+        async upload() {
+            const file = await this.loader.file;
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch('/api/admin/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: formData,
+                signal: this.controller.signal
+            });
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+            const data = await response.json();
+            const url = data.file_path; // e.g. /uploads/uuid.ext
+            // CKEditor expects an object with a 'default' URL for images
+            return { default: url };
+        }
+        abort() {
+            this.controller.abort();
+        }
+    }
+    function MyUploadAdapterPlugin(editor) {
+        const token = localStorage.getItem('adminToken') || '';
+        editor.plugins.get('FileRepository').createUploadAdapter = loader => {
+            return new CkUploadAdapter(loader, token);
+        };
+    }
+
+    // Use Classic build namespace
+    const EditorCtor = window.ClassicEditor;
+
+    if (EditorCtor) {
         if (document.getElementById('add-page-content')) {
-            ClassicEditor.create(document.getElementById('add-page-content'))
+            EditorCtor.create(document.getElementById('add-page-content'), {
+                extraPlugins: [ MyUploadAdapterPlugin ]
+            })
                 .then(editor => {
                     addPageEditor = editor;
                 })
@@ -104,7 +147,9 @@ async function uploadFile(inputId) {
                 });
         }
         if (document.getElementById('edit-page-content')) {
-            ClassicEditor.create(document.getElementById('edit-page-content'))
+            EditorCtor.create(document.getElementById('edit-page-content'), {
+                extraPlugins: [ MyUploadAdapterPlugin ]
+            })
                 .then(editor => {
                     editPageEditor = editor;
                 })
@@ -113,6 +158,64 @@ async function uploadFile(inputId) {
                 });
         }
     }
+
+    // Helper: upload selected video and insert a <video> tag into the editor content
+    async function uploadAndInsertVideo(file, targetEditor) {
+        try {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch('/api/admin/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('adminToken') || '')
+                },
+                body: formData
+            });
+            if (!response.ok) throw new Error('Video upload failed');
+            const data = await response.json();
+            const url = data.file_path; // /uploads/...
+            // Optional: prompt for dimensions (leave blank for responsive)
+            const w = prompt('Video width in px (optional):', '');
+            const h = prompt('Video height in px (optional):', '');
+            const widthAttr = w && !isNaN(parseInt(w,10)) ? ` width="${parseInt(w,10)}"` : '';
+            const heightAttr = h && !isNaN(parseInt(h,10)) ? ` height="${parseInt(h,10)}"` : '';
+            const html = `<p><video controls src="${url}"${widthAttr}${heightAttr} style="max-width:100%;height:auto;"></video></p>`;
+            // Insert at current selection
+            targetEditor.model.change( writer => {
+                targetEditor.data.insertContent( html );
+            });
+        } catch (e) {
+            console.error('Failed to upload/insert video:', e);
+            alert('Failed to upload video');
+        }
+    }
+
+    // Wire up custom video upload buttons if present
+    function wireVideoButtons() {
+        const addVideoInput = document.getElementById('add-insert-video-input');
+        const addVideoBtn = document.getElementById('add-insert-video-btn');
+        if (addVideoBtn && addVideoInput) {
+            addVideoBtn.addEventListener('click', () => addVideoInput.click());
+            addVideoInput.addEventListener('change', ev => {
+                const file = ev.target.files && ev.target.files[0];
+                if (file) uploadAndInsertVideo(file, addPageEditor);
+                ev.target.value = '';
+            });
+        }
+        const editVideoInput = document.getElementById('edit-insert-video-input');
+        const editVideoBtn = document.getElementById('edit-insert-video-btn');
+        if (editVideoBtn && editVideoInput) {
+            editVideoBtn.addEventListener('click', () => editVideoInput.click());
+            editVideoInput.addEventListener('change', ev => {
+                const file = ev.target.files && ev.target.files[0];
+                if (file) uploadAndInsertVideo(file, editPageEditor);
+                ev.target.value = '';
+            });
+        }
+    }
+
+    wireVideoButtons();
 
     // --- Utility Functions ---
 
@@ -236,42 +339,7 @@ async function uploadFile(inputId) {
             });
         }
 
-        // Preview button
-        const previewBtn = document.getElementById('preview-page-button');
-        if (previewBtn) {
-            previewBtn.addEventListener('click', () => {
-                const title = document.getElementById('add-page-title')?.value || 'Preview Title';
-                const content = addPageEditor ? addPageEditor.getData() : (document.getElementById('add-page-content')?.value || '');
-                const iw = document.getElementById('add-image-width')?.value;
-                const ih = document.getElementById('add-image-height')?.value;
-                const vw = document.getElementById('add-video-width')?.value;
-                const vh = document.getElementById('add-video-height')?.value;
-                const imageWidth = parseInt(iw || '0', 10) || null;
-                const imageHeight = parseInt(ih || '0', 10) || null;
-                const videoWidth = parseInt(vw || '0', 10) || null;
-                const videoHeight = parseInt(vh || '0', 10) || null;
-
-                const previewTitle = document.getElementById('preview-title');
-                const previewContent = document.getElementById('preview-content');
-                if (!previewTitle || !previewContent) {
-                    alert('Preview area is missing.');
-                    return;
-                }
-                previewTitle.textContent = title;
-                previewContent.innerHTML = content;
-
-                // Append media preview sizing
-                const imgEl = previewContent.querySelector('img');
-                if (imgEl && imageWidth) imgEl.style.maxWidth = imageWidth + 'px';
-                if (imgEl && imageHeight) imgEl.style.maxHeight = imageHeight + 'px';
-                const videoEl = previewContent.querySelector('video');
-                if (videoEl && videoWidth) videoEl.style.maxWidth = videoWidth + 'px';
-                if (videoEl && videoHeight) videoEl.style.maxHeight = videoHeight + 'px';
-
-                const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-                modal.show();
-            });
-        }
+        // Preview button removed
     }
 
     // --- Data Loading and Rendering ---
@@ -516,9 +584,7 @@ document.getElementById("add-page-form").addEventListener("submit", async functi
   const title = titleEl.value;
   const parentId = parentEl.value || null;
   const isChapter = chapterEl.checked;
-  const content = (window.CKEDITOR && CKEDITOR.instances['add-page-content']) ? 
-    CKEDITOR.instances['add-page-content'].getData() : 
-    contentEl.value;
+  const content = (addPageEditor ? addPageEditor.getData() : (contentEl.value || ''));
 
   // Build hierarchical slug using parent's slug when parent chosen
   function slugify(text) {

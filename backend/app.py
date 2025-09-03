@@ -23,7 +23,9 @@ from logging.handlers import RotatingFileHandler
 ALLOWED_TAGS = [
     'a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i', 'li', 'ol', 'p', 'strong', 'ul',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'div', 'span', 'img', 'video', 'source',
-    'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'iframe'
+    'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'iframe',
+    # Allow CKEditor image wrapper/caption elements
+    'figure', 'figcaption'
 ]
 ALLOWED_ATTRIBUTES = {
     '*': ['class', 'id', 'style'], # Allow class, id, style on all elements

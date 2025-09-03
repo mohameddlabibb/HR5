@@ -2,17 +2,7 @@
 
 {% block title %}{{ page.title | default(super()) }}{% endblock %}
 
-{% block breadcrumbs %}
-    <ol class="breadcrumb">
-        {% for crumb in breadcrumbs %}
-            {% if loop.last %}
-                <li class="breadcrumb-item active" aria-current="page">{{ crumb.title }}</li>
-            {% else %}
-                <li class="breadcrumb-item"><a href="{{ crumb.url }}">{{ crumb.title }}</a></li>
-            {% endif %}
-        {% endfor %}
-    </ol>
-{% endblock %}
+
 
 {% block page_title %}{{ page.title }}{% endblock %}
 
